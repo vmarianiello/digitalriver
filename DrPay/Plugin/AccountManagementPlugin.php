@@ -10,9 +10,9 @@ namespace Digitalriver\DrPay\Plugin;
 class AccountManagementPlugin
 {
 
-    /**
-     * @var session
-     */
+	/**
+	* @var session
+	*/
     protected $session;
     
     public function __construct(
@@ -30,12 +30,12 @@ class AccountManagementPlugin
      * @return null
      */
     public function beforeIsEmailAvailable(
-        \Magento\Customer\Model\AccountManagement $subject,
-        $customerEmail,
-        $websiteId = null
-    ) {
-        if ($customerEmail) {
-            $this->session->setGuestCustomerEmail($customerEmail);
-        }
-    }
+        \Magento\Customer\Model\AccountManagement $subject, 
+        $customerEmail, 
+        $websiteId = null 
+        ) { 
+			if($customerEmail){ 
+				$this->session->setGuestCustomerEmail($customerEmail);
+			} 
+		}
 }
