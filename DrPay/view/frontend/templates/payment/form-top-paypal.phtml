@@ -18,7 +18,7 @@
 					url: BASE_URL + 'drpay/paypal/savedrquote',
 					showLoader: true, //use for display loader 
 					success: function (response) {
-						console.log(response);
+						//console.log(response);
 						if (response.success) {
 							if(response.content.payload){
 								//Update billing address if not updated
@@ -33,7 +33,7 @@
 										document.getElementById('message').innerHTML =result.error;								        
 								    } else {
 								        var source = result.source;
-								        console.log(source);
+								        //console.log(source);
         						        window.checkoutConfig.payment.drpay_paypal.redirect_url = source.redirect.redirectUrl;
         						        continuePaypalOrder();
 								        //send source to back end

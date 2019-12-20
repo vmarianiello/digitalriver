@@ -1,24 +1,24 @@
 <?php
 
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- * @Module: Digitalriver_DrPay
+ *
+ * @category Digitalriver
+ * @package  Digitalriver_DrPay
  */
 
 namespace Digitalriver\DrPay\Model;
 
-use Digitalriver\DrPay\Api\DrConnectorRepositoryInterface;
 use Digitalriver\DrPay\Model\DrConnectorFactory as ResourceDrConnector;
 use Magento\Framework\Json\Helper\Data as JsonHelperData;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Sales\Model\OrderFactory;
 
 /**
- * 
+ *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class DrConnectorRepository implements DrConnectorRepositoryInterface {
+class DrConnectorRepository extends \Magento\Framework\Model\AbstractModel
+{
 
     /**
      * @var ResourceDrConnector
@@ -27,24 +27,26 @@ class DrConnectorRepository implements DrConnectorRepositoryInterface {
 
     /**
      *
-     * @var type 
+     * @var type
      */
     protected $orderFactory;
 
     /**
      *
-     * @var type 
+     * @var type
      */
     protected $jsonHelper;
 
     /**
-     * 
+     *
      * @param \Digitalriver\DrConnector\Model\DrConnectorFactory $resource
      * @param \Magento\Framework\Json\Helper\Data $jsonHelper
      * @param \Magento\Sales\Model\OrderFactory $orderFactory
      */
     public function __construct(
-    ResourceDrConnector $resource, JsonHelperData $jsonHelper, OrderFactory $orderFactory
+        ResourceDrConnector $resource,
+        JsonHelperData $jsonHelper,
+        OrderFactory $orderFactory
     ) {
         $this->orderFactory = $orderFactory;
         $this->resource = $resource;
@@ -52,26 +54,27 @@ class DrConnectorRepository implements DrConnectorRepositoryInterface {
     }
 
   /**
-     * {@inheritdoc}
-     */
-    public function SaveFullFillment($OrderLevelElectronicFulfillmentRequest) {
+   * {@inheritdoc}
+   */
+    public function saveFullFillment($OrderLevelElectronicFulfillmentRequest)
+    {
 
-        $response = array();
+        $response = [];
         $lineItemIds = [];
-        $electronicFulfillmentNotices = [(object) array()];
+        $electronicFulfillmentNotices = [(object) []];
         $requisitionId = $OrderLevelElectronicFulfillmentRequest['requisitionID'];
         $lineItemsIds = $OrderLevelElectronicFulfillmentRequest['lineItemLevelRequest'];
         $requestObj = $this->jsonHelper->jsonEncode($OrderLevelElectronicFulfillmentRequest);
         // Getting lineItemids
-            if(is_array($lineItemsIds) && isset($lineItemsIds['quantity'])){ 
-                $lineItemIds[] = ['qty' => $lineItemsIds['quantity'],'lineitemid'=>$lineItemsIds['lineItemID']]; 
-            }else{ 
-                foreach($lineItemsIds as $lineItemid){ 
-                 if(is_array($lineItemid)){ 
-                   $lineItemIds[] = ['qty' => $lineItemid['quantity'],'lineitemid'=>$lineItemid['lineItemID']]; 
-                  }
+        if (is_array($lineItemsIds) && isset($lineItemsIds['quantity'])) {
+            $lineItemIds[] = ['qty' => $lineItemsIds['quantity'],'lineitemid'=>$lineItemsIds['lineItemID']];
+        } else {
+            foreach ($lineItemsIds as $lineItemid) {
+                if (is_array($lineItemid)) {
+                      $lineItemIds[] = ['qty' => $lineItemid['quantity'],'lineitemid'=>$lineItemid['lineItemID']];
                 }
             }
+        }
         $data = [ 'requisition_id' => $requisitionId, 'request_obj' => $requestObj, 'line_item_ids'=> $this->jsonHelper->jsonEncode($lineItemIds)];
         try {
             if ($requisitionId) {
@@ -143,11 +146,7 @@ class DrConnectorRepository implements DrConnectorRepositoryInterface {
         } catch (\Exception $exception) {
             throw new CouldNotSaveException(__($exception->getMessage()));
         }
-        $result = $this->jsonHelper->jsonEncode($response);
-        // var_dump($this->jsonHelper->jsonDecode($result));die;
-        // return print_r($result);
-        echo json_encode($response);die;
 
+        return $response;
     }
-
 }

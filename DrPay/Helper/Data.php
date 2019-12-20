@@ -49,19 +49,19 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     protected $jsonHelper;
 
         /**
-            * @param Context                                          $context
-            * @param \Magento\Checkout\Model\Session                  $session
-            * @param \Magento\Store\Model\StoreManagerInterface       $storeManager
-            * @param \Magento\Catalog\Api\ProductRepositoryInterface  $productRepository
-            * @param \Magento\Quote\Api\CartManagementInterface       $_cartManagement
-            * @param \Magento\Customer\Model\Session                  $_customerSession
-            * @param \Magento\Checkout\Helper\Data                    $checkoutHelper
-            * @param \Magento\Framework\Encryption\EncryptorInterface $enc
-            * @param \Magento\Framework\HTTP\Client\Curl              $curl
-            * @param \Magento\Directory\Model\Region                  $regionModel
-            * @param \Digitalriver\DrPay\Model\DrConnectorFactory $drFactory 
-            * @param \Magento\Framework\Json\Helper\Data $jsonHelper 
-            * @param \Psr\Log\LoggerInterface                         $logger
+         * @param Context                                          $context
+         * @param \Magento\Checkout\Model\Session                  $session
+         * @param \Magento\Store\Model\StoreManagerInterface       $storeManager
+         * @param \Magento\Catalog\Api\ProductRepositoryInterface  $productRepository
+         * @param \Magento\Quote\Api\CartManagementInterface       $_cartManagement
+         * @param \Magento\Customer\Model\Session                  $_customerSession
+         * @param \Magento\Checkout\Helper\Data                    $checkoutHelper
+         * @param \Magento\Framework\Encryption\EncryptorInterface $enc
+         * @param \Magento\Framework\HTTP\Client\Curl              $curl
+         * @param \Magento\Directory\Model\Region                  $regionModel
+         * @param \Digitalriver\DrPay\Model\DrConnectorFactory $drFactory
+         * @param \Magento\Framework\Json\Helper\Data $jsonHelper
+         * @param \Psr\Log\LoggerInterface                         $logger
          */
     public function __construct(
         Context $context,
@@ -73,8 +73,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Checkout\Helper\Data $checkoutHelper,
         \Magento\Framework\Encryption\EncryptorInterface $enc,
         \Magento\Framework\HTTP\Client\Curl $curl,
-        \Magento\Directory\Model\Region $regionModel, 
-        \Digitalriver\DrPay\Model\DrConnectorFactory $drFactory, 
+        \Magento\Directory\Model\Region $regionModel,
+        \Digitalriver\DrPay\Model\DrConnectorFactory $drFactory,
         \Magento\Framework\Json\Helper\Data $jsonHelper,
         \Psr\Log\LoggerInterface $logger
     ) {
@@ -86,7 +86,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $this->checkoutHelper = $checkoutHelper;
          $this->regionModel = $regionModel;
          $this->_enc = $enc;
-         $this->curl = $curl; 
+         $this->curl = $curl;
          $this->jsonHelper = $jsonHelper;
         $this->_enc = $enc;
         $this->drFactory = $drFactory;
@@ -107,7 +107,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $external_reference_id = $guestEmail.$quote->getId();
         }
         $customerData = $quote->getCustomer();
-        try{ 
+        try {
             $this->createShopperInDr($quote, $external_reference_id);
             if ($external_reference_id) {
                 $fillAccessToken = '';
@@ -117,21 +117,23 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                    "dr_external_reference_id" => $external_reference_id,
                    "format" => "json"
                 ];
-                $this->curl->setOption(CURLOPT_RETURNTRANSFER, true);
-                $this->curl->setCredentials($this->getDrAuthUsername(), $this->getDrAuthPassword());
-                $this->curl->addHeader("Content-Type", "application/x-www-form-urlencoded");
-                $this->curl->post($url, $data);
-                $result = $this->curl->getBody();
-                $result = json_decode($result, true);
-                if (isset($result["access_token"])) {
-                    $fillAccessToken = $result["access_token"];
+                if ($this->getDrBaseUrl() && $this->getDrAuthUsername() && $this->getDrAuthPassword()) {
+                    $this->curl->setOption(CURLOPT_RETURNTRANSFER, true);
+                    $this->curl->setCredentials($this->getDrAuthUsername(), $this->getDrAuthPassword());
+                    $this->curl->addHeader("Content-Type", "application/x-www-form-urlencoded");
+                    $this->curl->post($url, $data);
+                    $result = $this->curl->getBody();
+                    $result = json_decode($result, true);
+                    if (isset($result["access_token"])) {
+                        $fillAccessToken = $result["access_token"];
+                    }
+                    if ($fillAccessToken) {
+                        $this->session->setDrAccessToken($fillAccessToken);
+                    }
+                    return $fillAccessToken;
                 }
-                if ($fillAccessToken) {
-                    $this->session->setDrAccessToken($fillAccessToken);
-                }
-                return $fillAccessToken;
-            }            
-        } catch(Exception $e){
+            }
+        } catch (Exception $e) {
             $this->_logger->error("Error in Token request.".$e->getMessage());
         }
     }
@@ -143,27 +145,30 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         if ($external_reference_id) {
             $address = $quote->getBillingAddress();
             $firstname = $address->getFirstname();
-            $lastname = $address->getLastname(); 
-            if ($this->_customerSession->isLoggedIn()) { 
-                $email = $address->getEmail(); 
-            } else { 
-                $email = $this->session->getGuestCustomerEmail(); 
+            $lastname = $address->getLastname();
+            if ($this->_customerSession->isLoggedIn()) {
+                $email = $address->getEmail();
+            } else {
+                $email = $this->session->getGuestCustomerEmail();
             }
             $username = $external_reference_id;
             $currency = $this->storeManager->getStore()->getCurrentCurrency()->getCode();
             $apikey = $this->getDrApiKey();
             $locale = $this->getLocale();
-            $url = $this->getDrBaseUrl()."v1/shoppers?apiKey=".$apikey."&format=json";
-            $data = "<shopper><firstName>".$firstname."</firstName><lastName>".$lastname .
-            "</lastName><externalReferenceId>".$username."</externalReferenceId><username>" .
-            $username."</username><emailAddress>".$email."</emailAddress><locale>".$locale .
-            "</locale><currency>".$currency."</currency></shopper>";
-            $this->_logger->info(json_encode($data));
-            $this->curl->setOption(CURLOPT_RETURNTRANSFER, true);
-            $this->curl->addHeader("Content-Type", "application/xml");
-            $this->curl->post($url, $data);
-            $result = $this->curl->getBody(); 
-            $this->_logger->info(json_encode($result));
+            $drBaseUrl = $this->getDrBaseUrl();
+            if ($apikey && $locale && $drBaseUrl) {
+                $url = $this->getDrBaseUrl()."v1/shoppers?apiKey=".$apikey."&format=json";
+                $data = "<shopper><firstName>".$firstname."</firstName><lastName>".$lastname .
+                "</lastName><externalReferenceId>".$username."</externalReferenceId><username>" .
+                $username."</username><emailAddress>".$email."</emailAddress><locale>".$locale .
+                "</locale><currency>".$currency."</currency></shopper>";
+                $this->_logger->info(json_encode($data));
+                $this->curl->setOption(CURLOPT_RETURNTRANSFER, true);
+                $this->curl->addHeader("Content-Type", "application/xml");
+                $this->curl->post($url, $data);
+                $result = $this->curl->getBody();
+                $this->_logger->info(json_encode($result));
+            }
         }
         return;
     }
@@ -181,7 +186,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $token = '';
         $this->_logger->info("Token: ".$accessToken);
         if ($accessToken) {
-            try { 
+            try {
                 $this->deleteDrCartItems($accessToken);
                 $testorder = $this->getIsTestOrder();
                 if ($testorder) {
@@ -215,7 +220,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                         $price = 0;
                     }
                     $lineItem["product"] = ['id' => $item->getSku()];
-                    //$lineItem["product"] = ['id' => '5321623900'];
+                    // $lineItem["product"] = ['id' => '5321623900'];
                     $lineItem["pricing"]["salePrice"] = ['currency' => $currency, 'value' => round($price, 2)];
                     $lineItemLevelExtendedAttribute = ['name' => 'LineItemLevelExtendedAttribute1',
                     'value' => 'litest01'];
@@ -312,14 +317,17 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     $data["cart"]["appliedOrderOffers"] = $shippingDetails;
                 }
                 $this->_logger->info("Request: ".json_encode($data));
-                $data = $this->encryptRequest(json_encode($data));
-                $this->curl->setOption(CURLOPT_RETURNTRANSFER, true);
-                $this->curl->addHeader("Content-Type", "application/json");
-                $this->curl->addHeader("Authorization", "Bearer ".$accessToken);
-                $this->curl->post($url, $data);
-                $result = $this->curl->getBody();
-                $result = json_decode($result, true);
-                $this->_logger->info("Response : ".json_encode($result));
+                $result = [];
+                if ($accessToken && $this->getDrBaseUrl()) {
+                    $data = $this->encryptRequest(json_encode($data));
+                    $this->curl->setOption(CURLOPT_RETURNTRANSFER, true);
+                    $this->curl->addHeader("Content-Type", "application/json");
+                    $this->curl->addHeader("Authorization", "Bearer ".$accessToken);
+                    $this->curl->post($url, $data);
+                    $result = $this->curl->getBody();
+                    $result = json_decode($result, true);
+                    $this->_logger->info("Response : ".json_encode($result));
+                }
                 if (isset($result["errors"])) {
                     $this->session->setDrQuoteError(true);
                     if ($return) {
@@ -339,7 +347,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 } else {
                     return;
                 }
-            }catch(Exception $e){ 
+            } catch (Exception $e) {
                 $this->_logger->error("Error in cart creation.".$e->getMessage());
             }
         }
@@ -353,7 +361,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function applyQuotePayment($sourceId = null)
     {
         $result = "";
-        if ($this->session->getDrAccessToken() && $sourceId!=null) {
+        if ($this->getDrBaseUrl() && $this->session->getDrAccessToken() && $sourceId!=null) {
             $accessToken = $this->session->getDrAccessToken();
             $url = $this->getDrBaseUrl()."v1/shoppers/me/carts/active/apply-payment-method?format=json";
             $data["paymentMethod"]["sourceId"] = $sourceId;
@@ -379,7 +387,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     {
         $result = "";
         $data = [];
-        if ($this->session->getDrAccessToken() && $paymentId!=null) {
+        if ($this->getDrBaseUrl() && $this->session->getDrAccessToken() && $paymentId!=null) {
             $accessToken = $this->session->getDrAccessToken();
             $url = $this->getDrBaseUrl().
             "v1/shoppers/me/carts/active/apply-shopper?paymentOptionId=".$paymentId."&format=json";
@@ -404,7 +412,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function applySourceShopper($sourceId = null, $name = "Default Card")
     {
-        if ($this->session->getDrAccessToken() && $sourceId!=null) {
+        if ($this->getDrBaseUrl() && $this->session->getDrAccessToken() && $sourceId!=null) {
             $accessToken = $this->session->getDrAccessToken();
             $url = $this->getDrBaseUrl()."v1/shoppers/me/payment-options?format=json";
             $data["paymentOption"]["nickName"] = $name;
@@ -423,7 +431,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function getSavedCards()
     {
         $result = "";
-        if ($this->session->getDrAccessToken()) {
+        if ($this->getDrBaseUrl() && $this->session->getDrAccessToken()) {
             $accessToken = $this->session->getDrAccessToken();
             $url = $this->getDrBaseUrl()."v1/shoppers/me/payment-options?expand=all&format=json";
             
@@ -453,7 +461,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function deleteDrCartItems($accessToken)
     {
-        if ($accessToken) {
+        if ($accessToken && $this->getDrBaseUrl()) {
             $url = $this->getDrBaseUrl()."v1/shoppers/me/carts/active/line-items?format=json";
             $request = new \Zend\Http\Request();
             $httpHeaders = new \Zend\Http\Headers();
@@ -477,7 +485,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function applyShopperToCart($accessToken)
     {
-        if ($accessToken) {
+        if ($this->getDrBaseUrl() && $accessToken) {
             $url = $this->getDrBaseUrl()."v1/shoppers/me/carts/active/apply-shopper?format=json";
             $data = [];
             $this->curl->setOption(CURLOPT_RETURNTRANSFER, true);
@@ -496,7 +504,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function createOrderInDr($accessToken)
     {
-        if ($accessToken) {
+        if ($this->getDrBaseUrl() && $accessToken) {
             $url = $this->getDrBaseUrl()."v1/shoppers/me/carts/active/submit-cart?expand=all&format=json";
             $data = [];
             $this->curl->setOption(CURLOPT_RETURNTRANSFER, true);
@@ -563,32 +571,24 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             ->setCustomerGroupId(\Magento\Customer\Model\Group::NOT_LOGGED_IN_ID);
     }
     /**
-     * 
+     *
      * @return type
      */
-    public function postDrRequest($order) { 
-        $fulldir = explode('app/code', dirname(__FILE__));
-        $logfilename = $fulldir[0] . 'var/log/dr-con-req.log';
+    public function postDrRequest($order)
+    {
         if ($order->getDrOrderId()) {
             $drModel = $this->drFactory->create()->load($order->getDrOrderId(), 'requisition_id');
-            if($drModel->getPostStatus() == 1){
+            if ($drModel->getPostStatus() == 1) {
                 return;
             }
-            $url = $this->getDrPostUrl(); 
-            file_put_contents($logfilename, "Dr POST URL: " . $url . "\r\n", FILE_APPEND);
-            file_put_contents($logfilename, "Dr POST REQUEST LOG: " . json_encode($this->getFullFillmentPostRequest($order)) . "\r\n", FILE_APPEND);            
-            $ch = curl_init($url);
-            $headers = [
-                'Content-Type: application/json'
-            ];
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 40); //timeout in seconds
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $this->getFullFillmentPostRequest($order));
-            $result = curl_exec($ch);
-            file_put_contents($logfilename, "Dr POST REQUEST LOG: " . json_encode($result) . "\r\n", FILE_APPEND);
-            if($result){  
+            $url = $this->getDrPostUrl();
+            $fullFillmentPost = $this->getFullFillmentPostRequest($order);
+            $this->curl->setOption(CURLOPT_RETURNTRANSFER, true);
+            $this->curl->setOption(CURLOPT_TIMEOUT, 40);
+            $this->curl->addHeader("Content-Type", "application/json");
+            $this->curl->post($url, $fullFillmentPost);
+            $result = $this->curl->getBody();
+            if ($result) {
                 $drModel = $this->drFactory->create()->load($order->getDrOrderId(), 'requisition_id');
                 $drModel->setPostStatus(1);
                 $drModel->save();
@@ -597,13 +597,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             //return $xml;
         }
     }
-
     /**
-     * 
+     *
      * @param type $order
      * @return type
      */
-    public function getFullFillmentPostRequest($order) {
+    public function getFullFillmentPostRequest($order)
+    {
 
         $status = '';
         $responseCode = '';
@@ -654,32 +654,30 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * 
+     *
      * @return type
      */
-    public function initiateRefundRequest($creditmemo) { 
-        $fulldir = explode('app/code', dirname(__FILE__));
-        $logfilename = $fulldir[0] . 'var/log/dr-con-req.log';
+    public function initiateRefundRequest($creditmemo)
+    {
         $order = $creditmemo->getOrder();
         $flag = false;
         if ($order->getDrOrderId()) {
-            $url = $this->getDrRefundUrl()."orders/".$order->getDrOrderId()."/refunds"; 
+            $url = $this->getDrRefundUrl()."orders/".$order->getDrOrderId()."/refunds";
             $token = $this->generateRefundToken();
-            if($token){
-                $data = array("type" => "orderRefund", "category" => "ORDER_LEVEL_PRODUCT", "reason" => "VENDOR_APPROVED_REFUND", "comments" => "Unhappy with the product", "refundAmount" => array("currency" => $order->getOrderCurrencyCode(), "value" => round($creditmemo->getGrandTotal(), 2)));
-                $ch = curl_init($url);
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_TIMEOUT, 40); //timeout in seconds
-                curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', "Authorization: Bearer " . $token, 'x-siteid: '.$this->getCompanyId()));
-                file_put_contents($logfilename, "Dr POST REQUEST LOG: " . json_encode($data) . "\r\n", FILE_APPEND);
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-                $result = curl_exec($ch);               
-                file_put_contents($logfilename, "Dr POST Result LOG: " . json_encode($result) . "\r\n", FILE_APPEND);
+            if ($token) {
+                $data = ["type" => "orderRefund", "category" => "ORDER_LEVEL_PRODUCT", "reason" => "VENDOR_APPROVED_REFUND", "comments" => "Unhappy with the product", "refundAmount" => ["currency" => $order->getOrderCurrencyCode(), "value" => round($creditmemo->getGrandTotal(), 2)]];
+
+                $this->curl->setOption(CURLOPT_RETURNTRANSFER, true);
+                $this->curl->setOption(CURLOPT_TIMEOUT, 40);
+                $this->curl->addHeader("Content-Type", "application/json");
+                $this->curl->addHeader("x-siteid", $this->getCompanyId());
+                $this->curl->addHeader("Authorization", "Bearer " . $token);
+                $this->curl->post($url, json_encode($data));
+                $result = $this->curl->getBody();
                 $result = json_decode($result, true);
                 if (isset($result['errors']) && count($result['errors']['error'])>0) {
                     $flag = false;
-                }else{
+                } else {
                     $flag = true;
                 }
 
@@ -688,69 +686,80 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         }
         return $flag;
     }
-
     /**
-     * 
+     *
      * @return type
      */
-    public function generateRefundToken() {
-        $url = $this->getDrBaseUrl().'auth'; 
-        $ch = curl_init($url);
-        $data = array("grant_type" => "password", "username" => $this->getDrRefundUsername(), "password" => $this->getDrRefundPassword());
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 40); //timeout in seconds
-        curl_setopt($ch, CURLOPT_USERPWD, $this->getDrRefundAuthUsername() . ":" . $this->getDrRefundAuthPassword());
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded', 'x-siteid: '.$this->getCompanyId()));
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-        $result = curl_exec($ch);
-        curl_close($ch);
-        $result = json_decode($result, true);
+    public function generateRefundToken()
+    {
         $token = '';
-        if(isset($result["access_token"])){
-            $token = $result["access_token"];
+        if ($this->getDrBaseUrl() && $this->getDrRefundUsername() && $this->getDrRefundPassword() && $this->getDrRefundAuthUsername() && $this->getDrRefundAuthPassword()) {
+            $url = $this->getDrBaseUrl().'auth';
+
+            $data = ["grant_type" => "password", "username" => $this->getDrRefundUsername(), "password" => $this->getDrRefundPassword()];
+
+            $this->curl->setOption(CURLOPT_RETURNTRANSFER, true);
+            $this->curl->setOption(CURLOPT_TIMEOUT, 40);
+            $this->curl->setOption(CURLOPT_USERPWD, $this->getDrRefundAuthUsername() . ":" . $this->getDrRefundAuthPassword());
+            $this->curl->addHeader("Content-Type", 'application/x-www-form-urlencoded');
+            $this->curl->addHeader("x-siteid", $this->getCompanyId());
+            $this->curl->post($url, http_build_query($data));
+            $result = $this->curl->getBody();
+            $result = json_decode($result, true);
+            $token = '';
+            if (isset($result["access_token"])) {
+                $token = $result["access_token"];
+            }
+
         }
         return $token;
     }
 
     /**
-     * 
+     *
      * @return type
      */
-    public function getDrPostUrl() {
+    public function getDrPostUrl()
+    {
         return $this->scopeConfig->getValue('dr_settings/config/dr_post_url', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     /**
-     * 
+     *
      * @return type
      */
-    public function getDrRefundUrl() {
+    public function getDrRefundUrl()
+    {
         return $this->scopeConfig->getValue('dr_settings/config/dr_refund_url', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     /**
-     * 
+     *
      * @return type
      */
-    public function getCompanyId() {
+    public function getCompanyId()
+    {
         return $this->scopeConfig->getValue('dr_settings/config/company_id', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
-    public function getDrRefundUsername(){
+    public function getDrRefundUsername()
+    {
         return $this->scopeConfig->getValue('dr_settings/config/dr_refund_username', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
-    public function getDrRefundPassword(){
+    public function getDrRefundPassword()
+    {
         $dr_refund_pass = $this->scopeConfig->getValue('dr_settings/config/dr_refund_password', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
         return $this->_enc->decrypt($dr_refund_pass);
     }
 
-    public function getDrRefundAuthUsername(){
+    public function getDrRefundAuthUsername()
+    {
         return $this->scopeConfig->getValue('dr_settings/config/dr_refund_auth_username', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
-    public function getDrRefundAuthPassword(){
+    public function getDrRefundAuthPassword()
+    {
         $dr_auth_pass = $this->scopeConfig->getValue('dr_settings/config/dr_refund_auth_password', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
         return $this->_enc->decrypt($dr_auth_pass);
     }
@@ -836,5 +845,4 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $dr_offer = 'dr_settings/config/offer_id';
         return $this->scopeConfig->getValue($dr_offer, \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
-
 }

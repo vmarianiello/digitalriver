@@ -1,10 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ *
+ * @category   Digitalriver
+ * @package    Digitalriver_DrPay
+ */
+-->
+
 <schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
     <table name="sales_order" resource="default" engine="innodb" comment="">
         <column xsi:type="varchar" name="dr_order_id" nullable="true" length="25" comment="Dr Order Id"/>
     </table>
-    <table name="sales_order_grid" resource="default" engine="innodb" comment="">
-        <column xsi:type="varchar" name="dr_order_id" nullable="true" length="25" comment="Dr Order Id"/>
+    <table name="electronic_fulfillment" resource="default" engine="innodb" comment=""> 
+    	<column xsi:type="int" name="entity_id" nullable="false" comment="Entity ID"/>
+    	<column xsi:type="text" name="request_obj" nullable="false" comment="Request Object" />
+    	<column xsi:type="text" name="requisition_id" nullable="false" comment="Requisition ID" />
+    	<column xsi:type="text" name="line_item_ids" nullable="false" comment="Line Item Ids" />
+    	<column xsi:type="int" name="post_status" nullable="false" comment="Post Status" default="0"/> 
+    	<constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="entity_id"/>
+        </constraint>
     </table>
 </schema>

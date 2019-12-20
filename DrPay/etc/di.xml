@@ -13,5 +13,5 @@
     </type> 
 	<type name="Magento\Customer\Model\AccountManagement">
         <plugin name="set_guest_email" type="Digitalriver\DrPay\Plugin\AccountManagementPlugin" sortOrder="1"/>
-    </type>     
+    </type>  
 </config>

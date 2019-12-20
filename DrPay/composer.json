@@ -1,10 +1,9 @@
 {
 	"name":"digitalriver/module-drpay",
-	"version":"0.0.1",
+	"version":"0.1.1",
 	"type":"magento2-module",
-	"description":"Digitalriver payment module",	
+	"description":"Digitalriver DrPay module",	
 	"require":{
-        "php": "~7.1.3||~7.2.0",
         "magento/framework": "102.0.*",
         "magento/module-checkout": "100.3.*",
         "magento/module-payment": "100.3.*",

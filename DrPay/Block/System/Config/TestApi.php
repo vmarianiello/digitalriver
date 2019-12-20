@@ -71,7 +71,7 @@ class TestApi extends Field
     {
         $token = $this->getApiKey();
         if ($token) {
-            $token = $this->encryptor->decrypt($token); 
+            $token = $this->encryptor->decrypt($token);
             $apiUrl = $this->getBaseUrl()."/v1/site.drivenjson?apiKey=".$token;
             return $apiUrl;
         }

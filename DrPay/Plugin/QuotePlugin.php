@@ -25,10 +25,13 @@ class QuotePlugin
          $this->scopeConfig = $scopeConfig;
          $this->_logger = $logger;
     }
-    
-    public function getDrPayEnable() {
-		$storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-		return $this->scopeConfig->getValue(self::XML_PATH_ENABLE_DRPAY, $storeScope);
+    /**
+     * Get DrPay Module Status
+     */
+    public function getDrPayEnable()
+    {
+        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
+        return $this->scopeConfig->getValue(self::XML_PATH_ENABLE_DRPAY, $storeScope);
     }
 
     /**
@@ -43,19 +46,19 @@ class QuotePlugin
         $result,
         $address
     ) {
-		$enableDrPayValue = $this->getDrPayEnable();
-		if($enableDrPayValue) {	
+        $enableDrPayValue = $this->getDrPayEnable();
+        if ($enableDrPayValue) {
             $this->_logger->info("DrPay is enabled in shipping");
-			if (!$subject->isVirtual()) {
-				// Create Shopper and get Full access token
-				$this->drHelper->convertTokenToFullAccessToken();
-				//Create the cart in DR
-				$this->drHelper->createFullCartInDr($subject);
-			}
-		}else{ 
-			$this->_logger->info("DrPay is disabled in shipping"); 
-		}
-		return $result;
+            if (!$subject->isVirtual()) {
+                // Create Shopper and get Full access token
+                $this->drHelper->convertTokenToFullAccessToken();
+                //Create the cart in DR
+                $this->drHelper->createFullCartInDr($subject);
+            }
+        } else {
+            $this->_logger->info("DrPay is disabled in shipping");
+        }
+        return $result;
     }
 
     /**
@@ -70,19 +73,18 @@ class QuotePlugin
         $result,
         $address
     ) {
-		$enableDrPayValue = $this->getDrPayEnable();		
-		if($enableDrPayValue) { 
-            $this->_logger->info("DrPay is enabled in billing");	
-			if ($subject->isVirtual()) {
-				// Create Shopper and get Full access token
-				$this->drHelper->convertTokenToFullAccessToken();
-				//Create the cart in DR
-				$this->drHelper->createFullCartInDr($subject);
-			}
-		} 
-		else { 
-			$this->_logger->info("DrPay is disabled in billing"); 
-		}
+        $enableDrPayValue = $this->getDrPayEnable();
+        if ($enableDrPayValue) {
+            $this->_logger->info("DrPay is enabled in billing");
+            if ($subject->isVirtual()) {
+                // Create Shopper and get Full access token
+                $this->drHelper->convertTokenToFullAccessToken();
+                //Create the cart in DR
+                $this->drHelper->createFullCartInDr($subject);
+            }
+        } else {
+            $this->_logger->info("DrPay is disabled in billing");
+        }
         return $result;
     }
 }
