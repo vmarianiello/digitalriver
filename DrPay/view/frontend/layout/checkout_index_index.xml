@@ -6,7 +6,9 @@
     <body>
         <referenceContainer name="content">
             <block ifconfig="payment/drpay_creditcard/active" class="Magento\Framework\View\Element\Template" name="dr_creditcard_form_top" before="checkout.root" cacheable="false" template="Digitalriver_DrPay::payment/form-top-creditcard.phtml"/>
-            <block ifconfig="payment/drpay_paypal/active" class="Magento\Framework\View\Element\Template" name="dr_paypal_form_top" before="checkout.root" cacheable="false" template="Digitalriver_DrPay::payment/form-top-paypal.phtml"/>
+            <block ifconfig="payment/drpay_paypal/active" class="Magento\Framework\View\Element\Template" name="dr_paypal_form_top" before="checkout.root" cacheable="false" template="Digitalriver_DrPay::payment/form-top-paypal.phtml"/> 
+            <block ifconfig="payment/drpay_direct_debit/active" class="Magento\Framework\View\Element\Template" name="dr_direct_debit_form_top" before="checkout.root" cacheable="false" template="Digitalriver_DrPay::payment/form-top-direct_debit.phtml"/> 
+            <block ifconfig="payment/drpay_apple_pay/active" class="Magento\Framework\View\Element\Template" name="dr_apple_pay_form_top" before="checkout.root" cacheable="false" template="Digitalriver_DrPay::payment/form-top-apple_pay.phtml"/>
         </referenceContainer>        
         <referenceBlock name="checkout.root">
             <arguments>
@@ -36,6 +38,22 @@
                                                                     <item name="component" xsi:type="string">Digitalriver_DrPay/js/view/payment/paypal</item>
                                                                     <item name="methods" xsi:type="array">
                                                                         <item name="drpay_paypal" xsi:type="array">
+                                                                            <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
+                                                                        </item>
+                                                                    </item>
+                                                                </item> 
+                                                                <item name="drpay_direct_debit-payment" xsi:type="array">
+                                                                    <item name="component" xsi:type="string">Digitalriver_DrPay/js/view/payment/direct_debit</item>
+                                                                    <item name="methods" xsi:type="array">
+                                                                        <item name="drpay_direct_debit" xsi:type="array">
+                                                                            <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
+                                                                        </item>
+                                                                    </item>
+                                                                </item> 
+                                                                <item name="drpay_apple_pay-payment" xsi:type="array">
+                                                                    <item name="component" xsi:type="string">Digitalriver_DrPay/js/view/payment/apple_pay</item>
+                                                                    <item name="methods" xsi:type="array">
+                                                                        <item name="drpay_apple_pay" xsi:type="array">
                                                                             <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
                                                                         </item>
                                                                     </item>

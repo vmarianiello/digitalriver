@@ -11,7 +11,7 @@
         <payment>
             <drpay_creditcard>
                 <active>0</active>
-                <url>https://js.digitalriver.com/v1/DigitalRiver.js</url>
+                <url>https://js.digitalriverws.com/v1/DigitalRiver.js</url>
                 <sort_order>1</sort_order>
                 <model>Digitalriver\DrPay\Model\CreditCard</model>
                 <order_status>pending_payment</order_status>
@@ -22,7 +22,7 @@
             </drpay_creditcard>
             <drpay_paypal>
                 <active>0</active>
-                <url>https://js.digitalriver.com/v1/DigitalRiver.js</url>
+                <url>https://js.digitalriverws.com/v1/DigitalRiver.js</url>
                 <sort_order>1</sort_order>
                 <model>Digitalriver\DrPay\Model\PayPal</model>
                 <order_status>pending_payment</order_status>
@@ -30,7 +30,29 @@
                 <sort_order>1</sort_order>
                 <title><![CDATA[PayPal]]></title>
                 <instructions><![CDATA[Make a payment from your new or existing PayPal account.]]></instructions>
-            </drpay_paypal>
+            </drpay_paypal> 
+            <drpay_direct_debit>
+                <active>0</active>
+                <url>https://js.digitalriverws.com/v1/DigitalRiver.js</url>
+                <sort_order>1</sort_order>
+                <model>Digitalriver\DrPay\Model\DirectDebit</model>
+                <order_status>pending_payment</order_status>
+                <allowspecific>0</allowspecific>
+                <sort_order>1</sort_order>
+                <title><![CDATA[Direct Debit]]></title>
+                <instructions><![CDATA[Make a payment with Direct Debit]]></instructions>
+            </drpay_direct_debit>
+            <drpay_apple_pay>
+                <active>0</active>
+                <url>https://js.digitalriverws.com/v1/DigitalRiver.js</url>
+                <sort_order>1</sort_order>
+                <model>Digitalriver\DrPay\Model\ApplePay</model>
+                <order_status>pending_payment</order_status>
+                <allowspecific>0</allowspecific>
+                <sort_order>1</sort_order>
+                <title><![CDATA[Apple Pay]]></title>
+                <instructions><![CDATA[Make a payment with Apple Pay]]></instructions>
+            </drpay_apple_pay>
         </payment>
     </default>
 </config>

@@ -1,11 +1,6 @@
 <?php
-/**
- *
- * @category Digitalriver
- * @package  Digitalriver_DrPay
- */
- 
-namespace Digitalriver\DrPay\Model\PayPal;
+
+namespace Digitalriver\DrPay\Model\DirectDebit;
 
 use Magento\Checkout\Model\ConfigProviderInterface;
 use Magento\Framework\Escaper;
@@ -16,12 +11,11 @@ use Magento\Checkout\Model\Session as CheckoutSession;
 class ConfigProvider implements ConfigProviderInterface
 {
 
-    const PAYMENT_METHOD_CREDITCARD_CODE = 'drpay_paypal';
+    const PAYMENT_METHOD_DIRECT_DEBIT_CODE = 'drpay_direct_debit';
     /**
      * @var string[]
      */
-    protected $_methodCode = self::PAYMENT_METHOD_CREDITCARD_CODE;
-
+    protected $_methodCode = self::PAYMENT_METHOD_DIRECT_DEBIT_CODE;
     /**
      * @var ScopeConfigInterface
      */
@@ -74,16 +68,16 @@ class ConfigProvider implements ConfigProviderInterface
         $currency_check = true;
         $country_check = true;
         $allowed_country_arr = "";
-        $allowed_currency_path = 'payment/drpay_paypal/allow_currency';  
+        $allowed_currency_path = 'payment/drpay_direct_debit/allow_currency';  
         $allowed_currency = $this->_scopeConfig->getValue($allowed_currency_path,\Magento\Store\Model\ScopeInterface::SCOPE_STORE, $this->checkoutSession->getQuote()->getStore());
         $current_currency = $this->checkoutSession->getQuote()->getStore()->getCurrentCurrency()->getCode();
         $allowed_currency_arr = (isset($allowed_currency))?explode(",", $allowed_currency):''; 
         
         $current_country = $this->checkoutSession->getQuote()->getBillingAddress()->getCountryId(); 
-        $allow_specific_country_path = 'payment/drpay_paypal/allowspecific'; 
+        $allow_specific_country_path = 'payment/drpay_direct_debit/allowspecific'; 
         $allow_specific_country = $this->_scopeConfig->getValue($allow_specific_country_path, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $this->checkoutSession->getQuote()->getStore());
         if($allow_specific_country == 1) { 
-            $allowed_country_path = 'payment/drpay_paypal/specificcountry'; 
+            $allowed_country_path = 'payment/drpay_direct_debit/specificcountry'; 
             $allowed_country = $this->_scopeConfig->getValue($allowed_country_path, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $this->checkoutSession->getQuote()->getStore()); 
             $allowed_country_arr = (isset($allowed_country))?explode(",", $allowed_country):''; 
         }
@@ -101,7 +95,7 @@ class ConfigProvider implements ConfigProviderInterface
 
         $config = [ 
             'payment' => [ 
-                'drpay_paypal' => [ 
+                'drpay_direct_debit' => [ 
                     'js_url' => $this->_method->getJsUrl(), 
                     'public_key' => $this->_method->getPublicKey(), 
                     'is_active' => $isAvail, 
@@ -114,10 +108,10 @@ class ConfigProvider implements ConfigProviderInterface
         }
         return $config;
     }
-    /**
+	/**
      * Get instructions text from config
      *
-     * @param  string $code
+     * @param string $code
      * @return string
      */
     protected function getInstructions($code)

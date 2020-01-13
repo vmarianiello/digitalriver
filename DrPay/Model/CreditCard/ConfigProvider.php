@@ -10,6 +10,8 @@ namespace Digitalriver\DrPay\Model\CreditCard;
 use Magento\Checkout\Model\ConfigProviderInterface;
 use Magento\Framework\Escaper;
 use Magento\Payment\Helper\Data as PaymentHelper;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Checkout\Model\Session as CheckoutSession;
 
 class ConfigProvider implements ConfigProviderInterface
 {
@@ -19,7 +21,10 @@ class ConfigProvider implements ConfigProviderInterface
      * @var string[]
      */
     protected $_methodCode = self::PAYMENT_METHOD_CREDITCARD_CODE;
-
+    /**
+     * @var ScopeConfigInterface
+     */
+    protected $_scopeConfig;
     /**
      * $_method.
      *
@@ -32,17 +37,28 @@ class ConfigProvider implements ConfigProviderInterface
     protected $escaper;
 
     /**
+     * @var CheckoutSession
+     */
+    private $checkoutSession;
+
+    /**
      * __construct constructor.
      *
-     * @param PaymentHelper $paymentHelper
-     * @param Escaper       $escaper
+     * @param PaymentHelper                              $paymentHelper
+     * @param ScopeConfigInterface                       $scopeConfig 
+     * @param Session $checkoutSession
+     * @param Escaper                                    $escaper
      */
     public function __construct(
         PaymentHelper $paymentHelper,
+        ScopeConfigInterface $_scopeConfig, 
+        CheckoutSession $checkoutSession,
         Escaper $escaper
     ) {
         $this->_method = $paymentHelper->getMethodInstance($this->_methodCode);
-        $this->escaper = $escaper;
+        $this->escaper = $escaper; 
+        $this->checkoutSession = $checkoutSession;        
+        $this->_scopeConfig = $_scopeConfig;
     }
 
     /**
@@ -52,20 +68,49 @@ class ConfigProvider implements ConfigProviderInterface
      */
     public function getConfig()
     {
-        $config = [
-            'payment' => [
-                'drpay_creditcard' => [
-                    'js_url' => $this->_method->getJsUrl(),
-                    'public_key' => $this->_method->getPublicKey(),
-                    'is_active' => $this->_method->isAvailable(),
-                    'title' => $this->_method->getTitle(),
-                ],
-            ],
-        ];
-        if ($this->_method->isAvailable()) {
-            $config['payment']['instructions'][$this->_methodCode] = $this->getInstructions($this->_methodCode);
+        // var_dump($this->checkoutSession->getQuote()->getStore()->getCode());die;
+        $config = array(); 
+        $currency_check = true;
+        $country_check = true;
+        $allowed_country_arr = "";
+        $allowed_currency_path = 'payment/drpay_creditcard/allow_currency';  
+        $allowed_currency = $this->_scopeConfig->getValue($allowed_currency_path,\Magento\Store\Model\ScopeInterface::SCOPE_STORE, $this->checkoutSession->getQuote()->getStore());
+        $current_currency = $this->checkoutSession->getQuote()->getStore()->getCurrentCurrency()->getCode();
+        $allowed_currency_arr = (isset($allowed_currency))?explode(",", $allowed_currency):''; 
+        
+        $current_country = $this->checkoutSession->getQuote()->getBillingAddress()->getCountryId(); 
+        $allow_specific_country_path = 'payment/drpay_creditcard/allowspecific'; 
+        $allow_specific_country = $this->_scopeConfig->getValue($allow_specific_country_path, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $this->checkoutSession->getQuote()->getStore());
+        if($allow_specific_country == 1) { 
+            $allowed_country_path = 'payment/drpay_creditcard/specificcountry'; 
+            $allowed_country = $this->_scopeConfig->getValue($allowed_country_path, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $this->checkoutSession->getQuote()->getStore()); 
+            $allowed_country_arr = (isset($allowed_country))?explode(",", $allowed_country):''; 
+        }
+        if((is_array($allowed_currency_arr) && !in_array($current_currency, $allowed_currency_arr))) { 
+            $currency_check = false;
+        } 
+        if((is_array($allowed_country_arr) && !in_array($current_country, $allowed_country_arr))) { 
+            $country_check = false;
+        }
+        if($this->_method->isAvailable() && ($currency_check && $country_check)){ 
+            $isAvail = true;
+        }else { 
+            $isAvail = false;
         }
 
+        $config = [ 
+            'payment' => [ 
+                'drpay_creditcard' => [ 
+                    'js_url' => $this->_method->getJsUrl(), 
+                    'public_key' => $this->_method->getPublicKey(), 
+                    'is_active' => $isAvail, 
+                    'title' => $this->_method->getTitle(), 
+                ], 
+            ], 
+        ]; 
+        if ($isAvail) { 
+            $config['payment']['instructions'][$this->_methodCode] = $this->getInstructions($this->_methodCode); 
+        }
         return $config;
     }
     /**
