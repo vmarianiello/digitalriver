@@ -1,6 +1,6 @@
 {
 	"name":"digitalriver/module-drpay",
-	"version":"0.1.1",
+	"version":"0.1.2",
 	"type":"magento2-module",
 	"description":"Digitalriver DrPay module",	
 	"require":{

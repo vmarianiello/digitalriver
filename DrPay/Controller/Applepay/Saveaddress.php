@@ -30,7 +30,7 @@ class Saveaddress extends \Magento\Framework\App\Action\Action
         $quote = $this->_checkoutSession->getQuote();
         $cartResult = $this->helper->createFullCartInDr($quote, 1);
         $accessToken = $this->_checkoutSession->getDrAccessToken();
-        $responseContent = array();
+        $responseContent = [];
           // $paymentResult = $this->helper->applyQuotePayment($source_id);
           $payload = [];
           $itemsArr = [];
