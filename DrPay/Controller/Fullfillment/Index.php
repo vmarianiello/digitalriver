@@ -21,6 +21,7 @@ class Index extends \Magento\Framework\App\Action\Action implements CsrfAwareAct
 {
     /**
      * @param \Magento\Framework\App\Action\Context $context
+     * @param \Digitalriver\DrPay\Model\DrConnectorRepositoryFactory $drConnectorRepositoryFactory
      */
 
     public function __construct(

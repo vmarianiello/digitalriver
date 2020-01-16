@@ -1,10 +1,33 @@
 <script type="text/javascript">
+function loadScriptCard(url, callback){
+    var script = document.createElement("script")
+    script.type = "text/javascript";
+
+    if (script.readyState){  //IE
+        script.onreadystatechange = function(){
+            if (script.readyState == "loaded" ||
+                    script.readyState == "complete"){
+                script.onreadystatechange = null;
+                callback();
+            }
+        };
+    } else {  //Others
+        script.onload = function(){
+            callback();
+        };
+    }
+
+    script.src = url;
+    document.getElementsByTagName("head")[0].appendChild(script);
+}
+
+</script>
+<script type="text/javascript">
 	function drCreditCardLoader(){	
 		var jsUrl = window.checkoutConfig.payment.drpay_creditcard.js_url;
 		var publicKey = window.checkoutConfig.payment.drpay_creditcard.public_key;
 		if(jsUrl && publicKey){ //If url and key set in admin
-			var script = document.createElement("script"); //Dynamically append the drcreditcardjs
-			script.onload = function () {
+			loadScriptCard(jsUrl, function(){
 		    //After append js set Your API Key and Start DigitalRiver.js
 		    var drcreditcardjs = new DigitalRiver(publicKey);
 
@@ -58,9 +81,7 @@
 					getCreditCardSourceId(drcreditcardjs, cardNumber);
 				}
 			});	    
-		};
-		script.src = jsUrl;
-		document.getElementsByTagName('head')[0].appendChild(script);
+		});
 		}
 	}
 	function getCreditCardSourceId(drcreditcardjs, cardNumber){
@@ -111,7 +132,7 @@
 					if(result.error) {
 						//Something went wrong, display the error message to the customer
 						document.getElementById('message').innerHTML ="";
-						document.getElementById('message').innerHTML = "<?= __("Unable to process") ?>";
+						document.getElementById('message').innerHTML = "<?= __('Unable to process') ?>";
 					} else {
 						//Success!  You can now send the token to your server for use in downstream API calls.
 						 var source = result.source;

@@ -40,19 +40,19 @@ class ConfigProvider implements ConfigProviderInterface
      * __construct constructor.
      *
      * @param PaymentHelper                              $paymentHelper
-     * @param ScopeConfigInterface                       $scopeConfig 
+     * @param ScopeConfigInterface                       $scopeConfig
      * @param Session $checkoutSession
      * @param Escaper                                    $escaper
      */
     public function __construct(
         PaymentHelper $paymentHelper,
-        ScopeConfigInterface $_scopeConfig, 
+        ScopeConfigInterface $_scopeConfig,
         CheckoutSession $checkoutSession,
         Escaper $escaper
     ) {
         $this->_method = $paymentHelper->getMethodInstance($this->_methodCode);
-        $this->escaper = $escaper; 
-        $this->checkoutSession = $checkoutSession;        
+        $this->escaper = $escaper;
+        $this->checkoutSession = $checkoutSession;
         $this->_scopeConfig = $_scopeConfig;
     }
 
@@ -64,51 +64,51 @@ class ConfigProvider implements ConfigProviderInterface
     public function getConfig()
     {
         // var_dump($this->checkoutSession->getQuote()->getStore()->getCode());die;
-        $config = array(); 
+        $config = [];
         $currency_check = true;
         $country_check = true;
         $allowed_country_arr = "";
-        $allowed_currency_path = 'payment/drpay_apple_pay/allow_currency';  
-        $allowed_currency = $this->_scopeConfig->getValue($allowed_currency_path,\Magento\Store\Model\ScopeInterface::SCOPE_STORE, $this->checkoutSession->getQuote()->getStore());
+        $allowed_currency_path = 'payment/drpay_apple_pay/allow_currency';
+        $allowed_currency = $this->_scopeConfig->getValue($allowed_currency_path, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $this->checkoutSession->getQuote()->getStore());
         $current_currency = $this->checkoutSession->getQuote()->getStore()->getCurrentCurrency()->getCode();
-        $allowed_currency_arr = (isset($allowed_currency))?explode(",", $allowed_currency):''; 
+        $allowed_currency_arr = (isset($allowed_currency))?explode(",", $allowed_currency):'';
         
-        $current_country = $this->checkoutSession->getQuote()->getBillingAddress()->getCountryId(); 
-        $allow_specific_country_path = 'payment/drpay_apple_pay/allowspecific'; 
+        $current_country = $this->checkoutSession->getQuote()->getBillingAddress()->getCountryId();
+        $allow_specific_country_path = 'payment/drpay_apple_pay/allowspecific';
         $allow_specific_country = $this->_scopeConfig->getValue($allow_specific_country_path, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $this->checkoutSession->getQuote()->getStore());
-        if($allow_specific_country == 1) { 
-            $allowed_country_path = 'payment/drpay_apple_pay/specificcountry'; 
-            $allowed_country = $this->_scopeConfig->getValue($allowed_country_path, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $this->checkoutSession->getQuote()->getStore()); 
-            $allowed_country_arr = (isset($allowed_country))?explode(",", $allowed_country):''; 
+        if ($allow_specific_country == 1) {
+            $allowed_country_path = 'payment/drpay_apple_pay/specificcountry';
+            $allowed_country = $this->_scopeConfig->getValue($allowed_country_path, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $this->checkoutSession->getQuote()->getStore());
+            $allowed_country_arr = (isset($allowed_country))?explode(",", $allowed_country):'';
         }
-        if((is_array($allowed_currency_arr) && !in_array($current_currency, $allowed_currency_arr))) { 
+        if ((is_array($allowed_currency_arr) && !in_array($current_currency, $allowed_currency_arr))) {
             $currency_check = false;
-        } 
-        if((is_array($allowed_country_arr) && !in_array($current_country, $allowed_country_arr))) { 
+        }
+        if ((is_array($allowed_country_arr) && !in_array($current_country, $allowed_country_arr))) {
             $country_check = false;
         }
-        if($this->_method->isAvailable() && ($currency_check && $country_check)){ 
+        if ($this->_method->isAvailable() && ($currency_check && $country_check)) {
             $isAvail = true;
-        }else { 
+        } else {
             $isAvail = false;
         }
 
-        $config = [ 
-            'payment' => [ 
-                'drpay_apple_pay' => [ 
-                    'js_url' => $this->_method->getJsUrl(), 
-                    'public_key' => $this->_method->getPublicKey(), 
-                    'is_active' => $isAvail, 
-                    'title' => $this->_method->getTitle(), 
-                ], 
-            ], 
-        ]; 
-        if ($isAvail) { 
-            $config['payment']['instructions'][$this->_methodCode] = $this->getInstructions($this->_methodCode); 
+        $config = [
+            'payment' => [
+                'drpay_apple_pay' => [
+                    'js_url' => $this->_method->getJsUrl(),
+                    'public_key' => $this->_method->getPublicKey(),
+                    'is_active' => $isAvail,
+                    'title' => $this->_method->getTitle(),
+                ],
+            ],
+        ];
+        if ($isAvail) {
+            $config['payment']['instructions'][$this->_methodCode] = $this->getInstructions($this->_methodCode);
         }
         return $config;
     }
-	/**
+    /**
      * Get instructions text from config
      *
      * @param string $code

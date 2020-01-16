@@ -47,7 +47,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     protected $curl;
     protected $drFactory;
     protected $jsonHelper;
-    protected $storeLocale;
 
         /**
          * @param Context                                          $context
@@ -77,12 +76,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Directory\Model\Region $regionModel,
         \Digitalriver\DrPay\Model\DrConnectorFactory $drFactory,
         \Magento\Framework\Json\Helper\Data $jsonHelper,
-        \Magento\Framework\Locale\ResolverInterface $storeLocale,
         \Psr\Log\LoggerInterface $logger
     ) {
         $this->session = $session;
         $this->storeManager = $storeManager;
-        $this->storeLocale = $storeLocale;
          $this->productRepository = $productRepository;
         $this->_cartManagement = $_cartManagement;
         $this->_customerSession = $_customerSession;
@@ -157,7 +154,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $username = $external_reference_id;
             $currency = $this->storeManager->getStore()->getCurrentCurrency()->getCode();
             $apikey = $this->getDrApiKey();
-            $locale = $this->storeLocale->getLocale();//$this->getLocale();
+            $locale = $this->getLocale();
             $drBaseUrl = $this->getDrBaseUrl();
             if ($apikey && $locale && $drBaseUrl) {
                 $url = $this->getDrBaseUrl()."v1/shoppers?apiKey=".$apikey."&format=json";
@@ -174,26 +171,26 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             }
         }
         return;
-    } 
+    }
     public function updateAccessTokenCurrency($accessToken, $currentCurrency)
     {
-        if($accessToken){ 
+        if ($accessToken) {
             $apikey = $this->getDrApiKey();
             $locale = $this->getLocale();
             $drBaseUrl = $this->getDrBaseUrl();
             $this->_logger->info("API Key: ".$apikey .'Locale'. $locale. 'drBaseUrl'.$drBaseUrl);
-            if ($apikey && $locale && $drBaseUrl) { 
+            if ($apikey && $locale && $drBaseUrl) {
                 $data = [];
-                $url = $this->getDrBaseUrl()."v1/shoppers/me?locale=".$this->storeLocale->getLocale()."&currency=".$currentCurrency."&format=json";
-                $this->_logger->info("Url: ".$url );
+                $url = $this->getDrBaseUrl()."v1/shoppers/me?locale=".$locale."&currency=".$currentCurrency."&format=json";
+                $this->_logger->info("Url: ".$url);
                 $this->curl->setOption(CURLOPT_RETURNTRANSFER, true);
                 $this->curl->addHeader("Authorization", "Bearer ".$accessToken);
-                $this->curl->post($url,$data);
+                $this->curl->post($url, $data);
                 $result = $this->curl->getBody();
             }
         }
         return;
-    }    
+    }
     /**
      * @return array|null
      */
@@ -240,7 +237,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                         // $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
                         // $model = $objectManager->get('Magento\Directory\Helper\Data');
                         // $price = $model->currencyConvert($price, $baseCurrencyCode, $currency);
-                        $this->updateAccessTokenCurrency($accessToken, $currency);                  
+                        $this->updateAccessTokenCurrency($accessToken, $currency);
                    // }
                     if ($item->getDiscountAmount() > 0) {
                         $price = $price - ($item->getDiscountAmount()/$item->getQty());

@@ -1,10 +1,32 @@
 <script type="text/javascript">
+function loadScriptPayPal(url, callback){
+    var script = document.createElement("script")
+    script.type = "text/javascript";
+
+    if (script.readyState){  //IE
+        script.onreadystatechange = function(){
+            if (script.readyState == "loaded" ||
+                    script.readyState == "complete"){
+                script.onreadystatechange = null;
+                callback();
+            }
+        };
+    } else {  //Others
+        script.onload = function(){
+            callback();
+        };
+    }
+    script.src = url;
+    document.getElementsByTagName("head")[0].appendChild(script);
+}
+
+</script>
+<script type="text/javascript">
 	function drPaypalLoader(){
 		var jsUrl = window.checkoutConfig.payment.drpay_paypal.js_url;
 		var publicKey = window.checkoutConfig.payment.drpay_paypal.public_key;
 		if(jsUrl && publicKey){ //If url and key set in admin
-			var script = document.createElement("script"); //Dynamically append the drpaypaljs
-			script.onload = function () {
+			loadScriptPayPal(jsUrl, function(){	
 		    //After append js set Your API Key and Start DigitalRiver.js
 		    var drpaypaljs = new DigitalRiver(publicKey);
 			// Create a token or display an error when the form is submitted.
@@ -48,9 +70,7 @@
 					},
 				});	
 			});			    
-		};
-		script.src = jsUrl;
-		document.getElementsByTagName('head')[0].appendChild(script);
+		});
 		}
 	}
 

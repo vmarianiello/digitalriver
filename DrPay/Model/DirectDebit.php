@@ -30,7 +30,7 @@ class DirectDebit extends \Magento\Payment\Model\Method\AbstractMethod
     public function getJsUrl()
     {
          return trim($this->getConfigData('url'));
-    }    
+    }
 
     public function getPublicKey()
     {

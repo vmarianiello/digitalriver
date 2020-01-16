@@ -11,14 +11,14 @@ namespace Digitalriver\DrPay\Model;
  */
 class PayPal extends \Magento\Payment\Model\Method\AbstractMethod
 {
-    const PAYMENT_METHOD_CREDITCARD_CODE = 'drpay_paypal';
+    const PAYMENT_METHOD_PAYPAL_CODE = 'drpay_paypal';
 
     /**
      * Payment method code
      *
      * @var string
      */
-    protected $_code = self::PAYMENT_METHOD_CREDITCARD_CODE;
+    protected $_code = self::PAYMENT_METHOD_PAYPAL_CODE;
 
     /**
      * Info instructions block path
