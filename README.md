@@ -1,5 +1,6 @@
 # digitalriver_drpay
-1. Go to https://github.com/pradeeps-github/digitalriver and download the Extension.
+1. Go to https://github.com/pradeeps-github/digitalriver 
+and download the Extension.
 2. Extract the contents of the ZIP file on your computer.
 3. Connect your website source folder with the FTP/SFTP/SSH client and upload the DrPay folder inside the app/code/Digitalriver folder from the extension package to the corresponding root folder of your Magento installation.
 
