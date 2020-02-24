@@ -604,6 +604,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     {
         if ($order->getDrOrderId()) {
             $drModel = $this->drFactory->create()->load($order->getDrOrderId(), 'requisition_id');
+			if(!$drModel->getId()){
+				return;
+			}
             if ($drModel->getPostStatus() == 1) {
                 return;
             }
