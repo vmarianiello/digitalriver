@@ -27,10 +27,14 @@ class CreateDrOrder implements ObserverInterface
     public function __construct(
         \Digitalriver\DrPay\Helper\Data $helper,
         \Magento\Checkout\Model\Session $session,
+		\Digitalriver\DrPay\Model\DrConnector $drconnector,
+		\Magento\Framework\Json\Helper\Data $jsonHelper,
         \Magento\Store\Model\StoreManagerInterface $storeManager
     ) {
         $this->helper =  $helper;
         $this->session = $session;
+        $this->drconnector = $drconnector;
+		$this->jsonHelper = $jsonHelper;
         $this->_storeManager = $storeManager;
     }
 
@@ -69,6 +73,19 @@ class CreateDrOrder implements ObserverInterface
                         }
                         //Store the drOrderid in database
                         $orderId = $result["submitCart"]["order"]["id"];
+						if(isset($result["submitCart"]['lineItems']['lineItem'])){
+							$lineItems = $result["submitCart"]['lineItems']['lineItem'];
+							$model = $this->drconnector->load($orderId, 'requisition_id');
+							$model->setRequisitionId($orderId);
+							$lineItemIds = array();
+							foreach($lineItems as $item){
+								$qty = $item['quantity'];
+								$lineitemId = $item['id'];
+								$lineItemIds[] = ['qty' => $qty,'lineitemid' => $lineitemId];
+							}
+							$model->setLineItemIds($this->jsonHelper->jsonEncode($lineItemIds));
+							$model->save();
+						}
                         $order->setDrOrderId($orderId);
                     }
                 }

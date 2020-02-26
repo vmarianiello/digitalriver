@@ -13,8 +13,8 @@
         <column xsi:type="varchar" name="dr_order_id" nullable="true" length="25" comment="Dr Order Id"/>
         <column xsi:type="varchar" name="dr_order_state" nullable="true" length="55" comment="Dr Order Status"/>
     </table>
-    <table name="electronic_fulfillment" resource="default" engine="innodb" comment=""> 
-    	<column xsi:type="int" name="entity_id" nullable="false" comment="Entity ID"/>
+    <table name="electronic_fulfillment" resource="default" engine="innodb" comment="">
+    	<column xsi:type="int" name="entity_id" nullable="false" unsigned="true" identity="true" comment="Entity ID"/>
     	<column xsi:type="text" name="request_obj" nullable="false" comment="Request Object" />
     	<column xsi:type="text" name="requisition_id" nullable="false" comment="Requisition ID" />
     	<column xsi:type="text" name="line_item_ids" nullable="false" comment="Line Item Ids" />
