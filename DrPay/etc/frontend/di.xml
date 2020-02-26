@@ -13,7 +13,8 @@
                 <item name="drpay_creditcard_config_provider" xsi:type="object">Digitalriver\DrPay\Model\CreditCard\ConfigProvider</item>
                 <item name="drpay_paypal_config_provider" xsi:type="object">Digitalriver\DrPay\Model\PayPal\ConfigProvider</item> 
                 <item name="drpay_direct_debit_config_provider" xsi:type="object">Digitalriver\DrPay\Model\DirectDebit\ConfigProvider</item>
-                <item name="drpay_apple_pay_config_provider" xsi:type="object">Digitalriver\DrPay\Model\ApplePay\ConfigProvider</item>                
+                <item name="drpay_apple_pay_config_provider" xsi:type="object">Digitalriver\DrPay\Model\ApplePay\ConfigProvider</item>    
+                <item name="drpay_wire_transfer_config_provider" xsi:type="object">Digitalriver\DrPay\Model\WireTransfer\ConfigProvider</item>             
             </argument>
         </arguments>
     </type>

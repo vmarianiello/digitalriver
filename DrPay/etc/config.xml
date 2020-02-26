@@ -53,6 +53,17 @@
                 <title><![CDATA[Apple Pay]]></title>
                 <instructions><![CDATA[Make a payment with Apple Pay]]></instructions>
             </drpay_apple_pay>
+            <drpay_wire_transfer>
+                <active>0</active>
+                <url>https://js.digitalriverws.com/v1/DigitalRiver.js</url>
+                <sort_order>1</sort_order>
+                <model>Digitalriver\DrPay\Model\WireTransfer</model>
+                <order_status>pending_payment</order_status>
+                <allowspecific>0</allowspecific>
+                <sort_order>1</sort_order>
+                <title><![CDATA[Wire Transfer]]></title>
+                <instructions><![CDATA[Make a payment with Wire Transfer]]></instructions>
+            </drpay_wire_transfer>
         </payment>
     </default>
 </config>

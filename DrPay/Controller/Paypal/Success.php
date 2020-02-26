@@ -51,6 +51,8 @@ class Success extends \Magento\Framework\App\Action\Action
         \Magento\Checkout\Model\Session $checkoutSession,
         \Digitalriver\DrPay\Helper\Data $helper,
         \Magento\Directory\Model\Region $regionModel,
+		\Digitalriver\DrPay\Model\DrConnector $drconnector,
+		\Magento\Framework\Json\Helper\Data $jsonHelper,
         \Magento\Quote\Model\QuoteFactory $quoteFactory
     ) {
         $this->customerSession = $customerSession;
@@ -58,7 +60,9 @@ class Success extends \Magento\Framework\App\Action\Action
         $this->helper =  $helper;
         $this->checkoutSession = $checkoutSession;
         $this->quoteFactory = $quoteFactory;
-         $this->regionModel = $regionModel;
+        $this->regionModel = $regionModel;
+        $this->drconnector = $drconnector;
+		$this->jsonHelper = $jsonHelper;
         return parent::__construct($context);
     }
     
@@ -112,16 +116,23 @@ class Success extends \Magento\Framework\App\Action\Action
                     $order->setDrOrderId($orderId);
                     $amount = $quote->getDrTax();
                     $order->setDrTax($amount);
-                }
-                $order->setState("pending_payment");
-                $order->setStatus("pending_payment");
-				if($result["submitCart"]["order"]["orderState"]){
-					$order->setDrOrderState($result["submitCart"]["order"]["orderState"]);
+					if($result["submitCart"]["order"]["orderState"]){
+						$order->setDrOrderState($result["submitCart"]["order"]["orderState"]);
+					}
+					if(isset($result["submitCart"]['lineItems']['lineItem'])){
+						$lineItems = $result["submitCart"]['lineItems']['lineItem'];
+						$model = $this->drconnector->load($orderId, 'requisition_id');
+						$model->setRequisitionId($orderId);
+						$lineItemIds = array();
+						foreach($lineItems as $item){
+							$qty = $item['quantity'];
+							$lineitemId = $item['id'];
+							$lineItemIds[] = ['qty' => $qty,'lineitemid' => $lineitemId];
+						}
+						$model->setLineItemIds($this->jsonHelper->jsonEncode($lineItemIds));
+						$model->save();
+					}
 				}
-                if($result["submitCart"]["order"]["orderState"] === "Submitted"){
-                    $order->setState("processing");
-                    $order->setStatus("processing");
-                }
                 $order->save();
                 $this->_redirect('checkout/onepage/success', ['_secure'=>true]);
                 return;

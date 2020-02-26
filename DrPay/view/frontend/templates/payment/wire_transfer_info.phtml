@@ -1,0 +1,23 @@
+<?php 
+$order = $block->getOrder();
+$paymentInstruction = $order->getPayment()->getAdditionalInformation();
+$objectManager = \Magento\Framework\App\ObjectManager::getInstance(); // Instance of Object Manager
+$priceHelper = $objectManager->create('Magento\Framework\Pricing\Helper\Data'); // Instance of Pricing Helper
+?>
+<?php if($order->getPayment()->getMethod() == "drpay_wire_transfer" && isset($paymentInstruction)): ?>
+<div style="border: 1px solid #ccc;margin: 10px 0 20px;">
+	<h3 style="background: #1979c3;padding: 10px 15px;margin: 0;color: #fff;"><?php echo __("Payment Instructions") ?></h3>
+	<div style="padding: 15px;">
+		<p><?php echo __("Please make your payment now to complete your order.") ?></p>
+		<p><?php echo __("Provide your bank with the following wire transfer instruction:") ?></p>
+		<p><b><?php echo __("Amount:") ?></b> <?php echo $priceHelper->currency($order->getGrandTotal(), true, false); ?></p>
+		<p><b><?php echo __("Wire Transfer Reference Number:") ?></b> <?php echo $paymentInstruction['referenceId']; ?></p>
+		<p><b><?php echo __("Bank:") ?></b> <?php echo $paymentInstruction['bankName']; ?></p>
+		<p><b><?php echo __("Location:") ?></b> <?php echo '1 California St #2200, San Francisco, CA 94111, USA';//$paymentInstruction['additionalBankInformation']; ?></p>
+		<p><b><?php echo __("Account Holder:") ?></b> <?php echo $paymentInstruction['accountHolder']; ?></p>
+		<p><b><?php echo __("Account Number:") ?></b> <?php echo $paymentInstruction['accountNumber']; ?></p>
+		<p><b><?php echo __("Swift Code:") ?></b> <?php echo $paymentInstruction['swiftCode']; ?></p>
+		<!-- <p>Please ensure you use your <b>Reference Number</b> as your transaction reference when you electronically transfer the money  for payment. </p> -->
+	</div>
+</div>
+<?php endif; ?>
