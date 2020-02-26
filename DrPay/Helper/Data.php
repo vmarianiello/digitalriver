@@ -246,7 +246,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                         $price = 0;
                     }
                     $lineItem["product"] = ['id' => $item->getSku()];
-                    // $lineItem["product"] = ['id' => '5321623900'];
+                    $lineItem["product"] = ['id' => '5321623900'];
                     $lineItem["pricing"]["salePrice"] = ['currency' => $currency, 'value' => round($price, 2)];
                     $lineItemLevelExtendedAttribute = ['name' => 'LineItemLevelExtendedAttribute1',
                     'value' => 'litest01'];

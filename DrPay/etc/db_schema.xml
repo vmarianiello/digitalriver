@@ -11,6 +11,7 @@
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
     <table name="sales_order" resource="default" engine="innodb" comment="">
         <column xsi:type="varchar" name="dr_order_id" nullable="true" length="25" comment="Dr Order Id"/>
+        <column xsi:type="varchar" name="dr_order_state" nullable="true" length="55" comment="Dr Order Status"/>
     </table>
     <table name="electronic_fulfillment" resource="default" engine="innodb" comment=""> 
     	<column xsi:type="int" name="entity_id" nullable="false" comment="Entity ID"/>

@@ -62,8 +62,11 @@ class CreateDrOrder implements ObserverInterface
                     throw new CouldNotSaveException(__('Unable to Place Order'));
                 } else {
                     if (isset($result["submitCart"]["order"]["id"])) {
-                        $order->setState("processing");
-                        $order->setStatus("processing");
+					    $amount = $quote->getDrTax();
+					    $order->setDrTax($amount); 
+                        if($result["submitCart"]["order"]["orderState"]){
+                            $order->setDrOrderState($result["submitCart"]["order"]["orderState"]);    
+                        }
                         //Store the drOrderid in database
                         $orderId = $result["submitCart"]["order"]["id"];
                         $order->setDrOrderId($orderId);

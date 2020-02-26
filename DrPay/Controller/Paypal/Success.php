@@ -72,8 +72,8 @@ class Success extends \Magento\Framework\App\Action\Action
         $orderId = $this->checkoutSession->getLastOrderId();
         $order = $this->order->load($orderId);
         /**
- * @var \Magento\Framework\Controller\Result\Redirect $resultRedirect
-*/
+		 * @var \Magento\Framework\Controller\Result\Redirect $resultRedirect
+		 */
         $resultRedirect = $this->resultRedirectFactory->create();
         if ($this->getRequest()->getParam('sourceId')) {
             $quote = $this->quoteFactory->create()->load($order->getQuoteId());
@@ -113,9 +113,15 @@ class Success extends \Magento\Framework\App\Action\Action
                     $amount = $quote->getDrTax();
                     $order->setDrTax($amount);
                 }
-
-                $order->setState("processing");
-                $order->setStatus("processing");
+                $order->setState("pending_payment");
+                $order->setStatus("pending_payment");
+				if($result["submitCart"]["order"]["orderState"]){
+					$order->setDrOrderState($result["submitCart"]["order"]["orderState"]);
+				}
+                if($result["submitCart"]["order"]["orderState"] === "Submitted"){
+                    $order->setState("processing");
+                    $order->setStatus("processing");
+                }
                 $order->save();
                 $this->_redirect('checkout/onepage/success', ['_secure'=>true]);
                 return;

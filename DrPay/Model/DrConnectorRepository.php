@@ -79,7 +79,13 @@ class DrConnectorRepository extends \Magento\Framework\Model\AbstractModel
         try {
             if ($requisitionId) {
                 $order = $this->orderFactory->create()->load($requisitionId, 'dr_order_id');
-                if ($order->getId()) {
+                if ($order->getId()) { 
+                    if($order->getDrOrderState() != "Submitted"){ 
+						//update order status to processing as OFI means payment received
+						$order->setState("processing"); 
+                        $order->setStatus("processing");
+                        $order->save();
+                    }
                     $model = $this->resource->create();
                     $model->load($order->getDrOrderId(), 'requisition_id');
                     if (!$model->getId()) {
