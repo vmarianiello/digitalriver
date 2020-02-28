@@ -8,6 +8,7 @@ namespace Digitalriver\DrPay\Controller\Paypal;
 
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\Controller\ResultFactory;
 
 /**
  * Class Cancel
@@ -56,38 +57,18 @@ class Cancel extends \Magento\Framework\App\Action\Action
      */
     public function execute()
     {
-        $orderId = $this->checkoutSession->getLastOrderId();
-        $order = $this->order->load($orderId);
-        /**
- * @var \Magento\Framework\Controller\Result\Redirect $resultRedirect
-*/
-        $resultRedirect = $this->resultRedirectFactory->create();
-        $this->messageManager->addError(__('Unable to Place Order!! Payment has been failed'));
-        if ($order && $order->getId()) {
-            $order->cancel()->save();
-            /* @var $cart \Magento\Checkout\Model\Cart */
-            $cart = $this->_objectManager->get(\Magento\Checkout\Model\Cart::class);
-            $items = $order->getItemsCollection();
-            foreach ($items as $item) {
-                try {
-                    $cart->addOrderItem($item);
-                } catch (\Magento\Framework\Exception\LocalizedException $e) {
-                    if ($this->_objectManager->get(\Magento\Checkout\Model\Session::class)->getUseNotice(true)) {
-                        $this->messageManager->addNoticeMessage($e->getMessage());
-                    } else {
-                        $this->messageManager->addErrorMessage($e->getMessage());
-                    }
-                    return $resultRedirect->setPath('checkout/cart');
-                } catch (\Exception $e) {
-                    $this->messageManager->addExceptionMessage(
-                        $e,
-                        __('We can\'t add this item to your shopping cart right now.')
-                    );
-                    return $resultRedirect->setPath('checkout/cart');
-                }
-            }
-            $cart->save();
+         try {
+			$this->messageManager->addSuccessMessage(
+				__('Paypal Checkout has been canceled.')
+			);
+        } catch (\Magento\Framework\Exception\LocalizedException $e) {
+            $this->messageManager->addExceptionMessage($e, $e->getMessage());
+        } catch (\Exception $e) {
+            $this->messageManager->addExceptionMessage($e, __('Unable to cancel Paypal Checkout'));
         }
+
+        /** @var \Magento\Framework\Controller\Result\Redirect $resultRedirect */
+        $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
         return $resultRedirect->setPath('checkout/cart');
     }
 }

@@ -79,7 +79,14 @@ class DrConnectorRepository extends \Magento\Framework\Model\AbstractModel
         try {
             if ($requisitionId) {
                 $order = $this->orderFactory->create()->load($requisitionId, 'dr_order_id');
-                if ($order->getId()) {
+                if ($order->getId() && $order->getStatus() != \Magento\Sales\Model\Order::STATE_CANCELED) { 
+                    if($order->getDrOrderState() != "Submitted"){ 
+						//update order status to processing as OFI means payment received
+						$order->setDrOrderState("Submitted"); 
+						$order->setState("processing"); 
+                        $order->setStatus("processing");
+                        $order->save();
+                    }
                     $model = $this->resource->create();
                     $model->load($order->getDrOrderId(), 'requisition_id');
                     if (!$model->getId()) {
@@ -101,38 +108,6 @@ class DrConnectorRepository extends \Magento\Framework\Model\AbstractModel
                             ]
                         ];
                     }
-                } else {
-                    /* saving data even if order is not placed */
-                    $model = $this->resource->create();
-                    $model->load($requisitionId, 'requisition_id');
-                    if (!$model->getId()) {
-                        $model->setData($data);
-                        $model->save();
-                        $response = ['ElectronicFulfillmentResponse' => [
-                                "responseMessage" => "The request has been successfully processed by Magento",
-                                "successful" => "true",
-                                "isAutoRetriable" => "false",
-                                "electronicFulfillmentNotices" => $electronicFulfillmentNotices
-                            ]
-                        ];
-                    } else {
-                        $response = ['ElectronicFulfillmentResponse' => [
-                                "responseMessage" => "The request has already saved in Magento",
-                                "successful" => "false",
-                                "isAutoRetriable" => "false",
-                                "electronicFulfillmentNotices" => $electronicFulfillmentNotices
-                            ]
-                        ];
-                    }
-                    /*
-                    $response = ['ElectronicFulfillmentResponse' => [
-                            "responseMessage" => "This requisition_id is not exist in Magento",
-                            "successful" => "false",
-                            "isAutoRetriable" => "true",
-                            "electronicFulfillmentNotices" => []
-                        ]
-                    ];
-                    */
                 }
             } else {
                 $response = ['ElectronicFulfillmentResponse' => [

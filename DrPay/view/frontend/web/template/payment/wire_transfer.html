@@ -1,7 +1,13 @@
 <!--
 /**
- * @category Digitalriver
- * @package  Digitalriver_DrPay
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<!--
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
  */
 -->
 <div class="payment-method" data-bind="css: {'_active': (getCode() == isChecked())}">
@@ -17,52 +23,32 @@
         <div class="control__indicator"></div>
     </label>
     </div>
-    <div class="payment-method-content" afterRender="drPaypalLoader()">
-    <div id="payment-data_paypal"></div>
+    <div class="payment-method-content" afterRender="drWireLoader()"> 
+        <div class ="payment-data"></div>
         <!-- ko foreach: getRegion('messages') -->
         <!-- ko template: getTemplate() --><!-- /ko -->
         <!--/ko-->
-         <!--<a href="javascript:void(0);" class="details">(Details)</a>-->
-              <!-- PayPal Logo -->
-                  <!--   <img data-bind="attr: {src: require.toUrl('../images/paypal.png')}"
-                         class="payment-icon"/> -->
-                <!-- PayPal Logo -->
-            <div class="payment-method-instruction">
-                <span data-bind="text:getInstructions()"></span>
-            </div>    
-           <!-- ko foreach: getRegion('messages') -->
-            <!-- ko template: getTemplate() --><!-- /ko -->
-            <!--/ko-->
-            <div class="payment-method-billing-address">
-                <!-- ko foreach: $parent.getRegion(getBillingAddressFormName()) -->
-                <!-- ko template: getTemplate() --><!-- /ko -->
-                <!--/ko-->
-            </div>
-            <div class="checkout-agreements-block">
-                <!-- ko foreach: $parent.getRegion('before-place-order') -->
-                    <!-- ko template: getTemplate() --><!-- /ko -->
-                <!--/ko-->
-            </div>        
         <fieldset class="fieldset" data-bind='attr: {id: "payment_form_" + getCode()}'>
             <div class="payment-method-note">
                
             </div>
         </fieldset>
+        <div id="wire-message" class="mage-error" generated="true"></div>
         <div class="actions-toolbar">
-            <div class="primary paypal-btn-first">
+            <div class="primary wire_transfer-btn-first">
                 <button class="action primary"
-                        id="drpay-paypal-btn"
+                        id="drpay-wire-transfer-btn"
                         type="submit"
                         data-bind="enable: (getCode() == isChecked())"
                         disabled>
                     <span data-bind="i18n: 'Payment Information'"></span>
                 </button>
             </div>          
-            <div class="primary paypal-btn-second" style="display:none">
+            <div class="primary wire_transfer-btn-second" style="display:none">
                 <button class="action primary checkout"
                         type="submit"
                         data-bind="
-                        click: continueToPayPal,
+                        click: placeOrder,
                         attr: {title: $t('Place Your Order')},
                         enable: (getCode() == isChecked()),
                         css: {disabled: !isPlaceOrderActionAllowed()}
