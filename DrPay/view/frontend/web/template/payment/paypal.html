@@ -62,7 +62,7 @@
                 <button class="action primary checkout"
                         type="submit"
                         data-bind="
-                        click: placeOrder,
+                        click: continueToPayPal,
                         attr: {title: $t('Place Your Order')},
                         enable: (getCode() == isChecked()),
                         css: {disabled: !isPlaceOrderActionAllowed()}

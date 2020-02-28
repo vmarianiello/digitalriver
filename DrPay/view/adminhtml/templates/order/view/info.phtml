@@ -87,11 +87,13 @@ $allowedAddressHtmlTags = ['b', 'br', 'em', 'i', 'li', 'ol', 'p', 'strong', 'sub
                         </td>
                     </tr>
                 <?php endif; ?>
+				<?php if ($order->getDrOrderId()) : ?>
                     <!--Newly DR OrderId added-->
                      <tr>
                         <th><?= $block->escapeHtml(__('DR Order Id')) ?></th>
                         <td><?= $block->escapeHtml($order->getDrOrderId()); ?></td>
                     </tr>
+                <?php endif; ?>
                 <?php if ($order->getRemoteIp() && $block->shouldDisplayCustomerIp()) : ?>
                     <tr>
                         <th><?= $block->escapeHtml(__('Placed from IP')) ?></th>
