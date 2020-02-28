@@ -51,6 +51,9 @@ function loadScriptWire(url, callback){
 						}else{
 							//Show Error Message
 							console.log(response);
+							//Something went wrong, display the error message to the customer
+							document.getElementById('message').innerHTML = "";
+							document.getElementById('message').innerHTML = response.content;
 						}
 					},
 				});	
