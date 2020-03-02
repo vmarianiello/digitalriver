@@ -50,8 +50,8 @@ class Savedrsource extends \Magento\Framework\App\Action\Action
                 $source_id = $this->getRequest()->getParam('source_id');
                 $paymentResult = $this->helper->applyQuotePayment($source_id);
                 $is_save_future = $this->getRequest()->getParam('save_future_use');
-                $save_future_name = $this->getRequest()->getParam('save_future_use');
-                if (isset($is_save_future) && isset($save_future_name)) {
+                $save_future_name = $this->getRequest()->getParam('save_future_name');
+                if ($is_save_future == "true" && $save_future_name) {
                     $name = $this->getRequest()->getParam('save_future_name');
                     $this->helper->applySourceShopper($source_id, $name);
                 }
