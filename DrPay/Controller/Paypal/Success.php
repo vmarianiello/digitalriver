@@ -93,6 +93,12 @@ class Success extends \Magento\Framework\App\Action\Action
 					// "last successful quote"
 					$quoteId = $quote->getId();
 					$this->checkoutSession->setLastQuoteId($quoteId)->setLastSuccessQuoteId($quoteId);
+					if(!$quote->getCustomerId()){
+						$quote->setCustomerId(null)
+							->setCustomerEmail($quote->getBillingAddress()->getEmail())
+							->setCustomerIsGuest(true)
+							->setCustomerGroupId(\Magento\Customer\Model\Group::NOT_LOGGED_IN_ID);
+					}
 					$quote->collectTotals();
 					$order = $this->quoteManagement->submit($quote);
 
