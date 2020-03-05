@@ -617,12 +617,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $this->curl->addHeader("Content-Type", "application/json");
             $this->curl->post($url, $fullFillmentPost);
             $result = $this->curl->getBody();
-            if ($result) {
+			$statusCode = $this->curl->getStatus();
+            if ($statusCode == "200") {
                 $drModel = $this->drFactory->create()->load($order->getDrOrderId(), 'requisition_id');
                 $drModel->setPostStatus(1);
                 $drModel->save();
             }
-            return $result;
+            return $statusCode;
             //return $xml;
         }
     }
@@ -658,7 +659,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         if ($drObj->getId()) {
             $lineItems = $this->jsonHelper->jsonDecode($drObj->getLineItemIds());
             foreach ($lineItems as $item) {
-                $items[] = ['item' =>
+                $items['item'][] = 
                     ["requisitionID" => $order->getDrOrderId(),
                         "noticeExternalReferenceID" => $order->getIncrementId(),
                         "lineItemID" => $item['lineitemid'],
@@ -674,8 +675,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                                 ]
                             ]
                         ]
-                    ]
-                ];
+                    ];
             }
         }
         $request['ElectronicFulfillmentNoticeArray'] = $items;
