@@ -659,7 +659,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         if ($drObj->getId()) {
             $lineItems = $this->jsonHelper->jsonDecode($drObj->getLineItemIds());
             foreach ($lineItems as $item) {
-                $items[] = ['item' =>
+                $items['item'][] = 
                     ["requisitionID" => $order->getDrOrderId(),
                         "noticeExternalReferenceID" => $order->getIncrementId(),
                         "lineItemID" => $item['lineitemid'],
@@ -675,8 +675,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                                 ]
                             ]
                         ]
-                    ]
-                ];
+                    ];
             }
         }
         $request['ElectronicFulfillmentNoticeArray'] = $items;
