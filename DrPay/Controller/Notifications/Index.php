@@ -73,7 +73,8 @@ class Index extends \Magento\Framework\App\Action\Action implements CsrfAwareAct
 		if($order && $order->getId() && $order->canCancel()){
 			//cancel order
 			$order->cancel();
-			$comment = isset($OrderEventNotification["event"]["description"]) ? $OrderEventNotification["event"]["description"] : 'Order is canccled at DR side';
+			$description = isset($OrderEventNotification["event"]["description"]) ? $OrderEventNotification["event"]["description"] : 'Order is canccled at DR side';
+			$comment = $eventType .' : '. $description;
 			$order->addStatusToHistory(
 					$order->getStatus(),
 					__($comment)
