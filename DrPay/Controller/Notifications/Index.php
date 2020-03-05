@@ -55,7 +55,9 @@ class Index extends \Magento\Framework\App\Action\Action implements CsrfAwareAct
         } else {
             $responseContent = ["error" => "Invalid Request"];
         }
-        return;
+        $response = $this->resultFactory->create(ResultFactory::TYPE_JSON);
+        $response->setData($responseContent);
+        return $response;
     }
 
 	public function processNotification($OrderEventNotification){
