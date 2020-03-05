@@ -36,13 +36,26 @@ class OrderStatusObserver implements ObserverInterface
 
             switch ($order->getStatus()) {
                 case Order::STATE_COMPLETE:
-                    $postDrRequest =$this->drHelper->postDrRequest($order);
+                    $statusCode = $this->drHelper->postDrRequest($order);
+					$this->updateOrderComment($statusCode, $order);
                     break;
                 case Order::STATE_CANCELED:
-                    $postDrRequest = $this->drHelper->postDrRequest($order);
+                    $statusCode = $this->drHelper->postDrRequest($order);
+					$this->updateOrderComment($statusCode, $order);
                     break;
             }
         }
         return $this;
     }
+
+	public function updateOrderComment($statusCode, $order){
+		if($statusCode){
+			if($statusCode == "200"){
+				$comment = "Magento & DR order status are matached";
+			}else{
+				$comment = "Magento & DR order status are mis-matached";
+			}
+			$order->addStatusToHistory($order->getStatus(),__($comment));
+		}
+	}
 }
