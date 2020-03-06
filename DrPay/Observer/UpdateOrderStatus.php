@@ -10,6 +10,7 @@ namespace Digitalriver\DrPay\Observer;
 
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Exception\CouldNotSaveException;
+use \Magento\Sales\Model\Order as Order;
 
 /**
  *  CreateDrOrder
@@ -49,14 +50,14 @@ class UpdateOrderStatus implements ObserverInterface
         $order = $this->order->load($orderId);
         if($order->getDrOrderId()){
             if($order->getDrOrderState() == "Submitted"){ 
-                $order->setState("processing"); 
-                $order->setStatus("processing");
+                $order->setState(Order::STATE_PROCESSING); 
+                $order->setStatus(Order::STATE_PROCESSING);
             }else if($order->getDrOrderState() == "Source Pending Funds"){ 
-                $order->setState("pending_payment"); 
-                $order->setStatus("pending_payment");
+                $order->setState(Order::STATE_PENDING_PAYMENT); 
+                $order->setStatus(Order::STATE_PENDING_PAYMENT);
             }else{ 
-                $order->setState("payment_review"); 
-                $order->setStatus("payment_review");
+                $order->setState(Order::STATE_PAYMENT_REVIEW); 
+                $order->setStatus(Order::STATE_PAYMENT_REVIEW);
             }
             $order->save();
         }
