@@ -48,15 +48,12 @@ class QuotePlugin
     ) {
         $enableDrPayValue = $this->getDrPayEnable();
         if ($enableDrPayValue) {
-            $this->_logger->info("DrPay is enabled in shipping");
             if (!$subject->isVirtual()) {
                 // Create Shopper and get Full access token
                 $this->drHelper->convertTokenToFullAccessToken();
                 //Create the cart in DR
                 $this->drHelper->createFullCartInDr($subject);
             }
-        } else {
-            $this->_logger->info("DrPay is disabled in shipping");
         }
         return $result;
     }
@@ -75,15 +72,12 @@ class QuotePlugin
     ) {
         $enableDrPayValue = $this->getDrPayEnable();
         if ($enableDrPayValue) {
-            $this->_logger->info("DrPay is enabled in billing");
             if ($subject->isVirtual()) {
                 // Create Shopper and get Full access token
                 $this->drHelper->convertTokenToFullAccessToken();
                 //Create the cart in DR
                 $this->drHelper->createFullCartInDr($subject);
             }
-        } else {
-            $this->_logger->info("DrPay is disabled in billing");
         }
         return $result;
     }
