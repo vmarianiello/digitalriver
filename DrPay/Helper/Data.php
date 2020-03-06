@@ -704,7 +704,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 $this->curl->post($url, json_encode($data));
                 $result = $this->curl->getBody();
                 $result = json_decode($result, true);
-                if (isset($result['errors']) && count($result['errors']['error'])>0) {
+                if (isset($result['errors']) && count($result['errors'])>0) {
+					$this->_logger->error("Refund Error :".json_encode($result));
                     $flag = false;
                 } else {
                     $flag = true;
