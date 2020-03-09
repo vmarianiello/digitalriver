@@ -37,6 +37,7 @@ class Success extends \Magento\Framework\App\Action\Action
         \Magento\Directory\Model\Region $regionModel,
 		\Digitalriver\DrPay\Model\DrConnector $drconnector,
 		\Magento\Framework\Json\Helper\Data $jsonHelper,
+		\Magento\Quote\Api\CartManagementInterface $quoteManagement,
         QuoteFactory $quoteFactory
     ){
         $this->customerSession = $customerSession;
@@ -46,7 +47,8 @@ class Success extends \Magento\Framework\App\Action\Action
         $this->quoteFactory = $quoteFactory;
  		$this->regionModel = $regionModel;    
         $this->drconnector = $drconnector;
-		$this->jsonHelper = $jsonHelper;    
+		$this->jsonHelper = $jsonHelper;   
+		$this->quoteManagement = $quoteManagement; 
         return parent::__construct($context);
     }
     
@@ -57,24 +59,46 @@ class Success extends \Magento\Framework\App\Action\Action
      */
     public function execute()
     { 
-		$orderId = $this->checkoutSession->getLastOrderId();	
-		$order = $this->order->load($orderId);
-        $fulldir        = explode('app/code',dirname(__FILE__));
-        $logfilename    = $fulldir[0] . 'var/log/drpay-wire.log';		
-		if($orderId){
-			$quote = $this->quoteFactory->create()->load($order->getQuoteId());
+		$quote = $this->checkoutSession->getQuote();
+		if($quote && $quote->getId() && $quote->getIsActive()){
+			/**
+			 * @var \Magento\Framework\Controller\Result\Redirect $resultRedirect
+			 */
+			$resultRedirect = $this->resultRedirectFactory->create();
+			$fulldir        = explode('app/code',dirname(__FILE__));
+			$logfilename    = $fulldir[0] . 'var/log/drpay-wire.log';
             $source_id = $this->getRequest()->getParam('sourceId');
             $accessToken = $this->checkoutSession->getDrAccessToken();
             $paymentResult = $this->helper->applyQuotePayment($source_id);
 			$result = $this->helper->createOrderInDr($accessToken);
-			file_put_contents($logfilename, "Source Id: ".$this->getRequest()->getParam('sourceId')." wire Order Failed "." OrderId ".$order->getId(). "\r\n"." -> OrderData".json_encode($result)."\r\n"." Payment Data: ->".json_encode($paymentResult)."\r\n", FILE_APPEND);
+			file_put_contents($logfilename, "Source Id: ".$this->getRequest()->getParam('sourceId')." wire Order Failed "." OrderId ".$quote->getId(). "\r\n"." -> OrderData".json_encode($result)."\r\n"." Payment Data: ->".json_encode($paymentResult)."\r\n", FILE_APPEND);
 
 			if($result && isset($result["errors"])){
-				file_put_contents($logfilename, "Source Id: ".$this->getRequest()->getParam('sourceId')." wire Order Failed "." OrderId ".$order->getId(). "\r\n"." -> OrderData".json_encode($result)."\r\n"." Payment Data: ->".json_encode($paymentResult)."\r\n", FILE_APPEND);
+				file_put_contents($logfilename, "Source Id: ".$this->getRequest()->getParam('sourceId')." wire Order Failed "." OrderId ".$quote->getId(). "\r\n"." -> OrderData".json_encode($result)."\r\n"." Payment Data: ->".json_encode($paymentResult)."\r\n", FILE_APPEND);
 				$this->messageManager->addError(__('Unable to Place Order!! Payment has been failed'));
-				$this->_redirect("sales/order/reorder", array("order_id" => $order->getId()));
-				return;
-			}else{ 
+				return $resultRedirect->setPath('checkout/cart');
+			}else{ 				
+				// "last successful quote"
+				$quoteId = $quote->getId();
+				$this->checkoutSession->setLastQuoteId($quoteId)->setLastSuccessQuoteId($quoteId);
+				if(!$quote->getCustomerId()){
+					$quote->setCustomerId(null)
+						->setCustomerEmail($quote->getBillingAddress()->getEmail())
+						->setCustomerIsGuest(true)
+						->setCustomerGroupId(\Magento\Customer\Model\Group::NOT_LOGGED_IN_ID);
+				}
+				$quote->collectTotals();
+				$order = $this->quoteManagement->submit($quote);
+
+				if ($order) {
+					$this->checkoutSession->setLastOrderId($order->getId())
+						->setLastRealOrderId($order->getIncrementId())
+						->setLastOrderStatus($order->getStatus());
+				} else{
+					$this->messageManager->addError(__('Unable to Place Order!! Payment has been failed'));
+					$this->_redirect('checkout/cart');
+					return;						
+				}
                 $paymentData = $result["submitCart"]['paymentMethod']['wireTransfer'];
                 // $paymentData = json_decode($paymentData, true);
 				if(isset($result["submitCart"]["order"]["id"]) && is_array($paymentData)){
@@ -105,7 +129,7 @@ class Success extends \Magento\Framework\App\Action\Action
 				return;
 			}
 		}
-		$this->_redirect('checkout/cart');
-		return;
+        $this->_redirect('checkout/cart');
+        return;
     }
 }

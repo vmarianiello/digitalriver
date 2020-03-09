@@ -82,21 +82,29 @@ function loadScriptWire(url, callback){
 							}
 						});
 					}
+					var customerEmail = "";
+					if(window.checkoutConfig.isCustomerLoggedIn){ 
+						customerEmail = window.checkoutConfig.quoteData.customer_email;	
+					}else{ 
+						if(jQuery("#customer-email").length){
+							customerEmail = jQuery("#customer-email").val();		
+						}
+					}
 					var payload = {
 					  "type": "wireTransfer", 
 					  "amount": grand_total, 
 					  //"liveMode":false,
 					  "currency": totals.quote_currency_code,
 					  "owner": {
-							firstName: window.customerData.firstname,
-							lastName: window.customerData.lastname,
-							email: window.customerData.email, 
-							phoneNumber: window.customerData.telephone,
+							firstName: billingAddress.firstname,
+							lastName: billingAddress.lastname,
+							email: customerEmail, 
+							phoneNumber: billingAddress.telephone,
 							address: {
 								line1: billingAddress.street[0],
 								line2: billingAddress.street[1],
 								city: billingAddress.city,
-								state: billingAddress.regionCode,
+								state: (billingAddress.regionCode) ? billingAddress.regionCode:"na",
 								postalCode: billingAddress.postcode,
 								country: billingAddress.countryId
 							}
