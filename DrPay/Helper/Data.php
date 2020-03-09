@@ -231,7 +231,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     $item = ($item->getParentItemId())?$item->getParentItem():$item;
                     $lineItem =  [];
                     $lineItem["quantity"] = $item->getQty();
-                    $price = $item->getPriceInclTax();
+                    $price = $item->getPrice();
                     $this->_logger->info("Currency: ".$currency .'!='. $baseCurrencyCode);
                    // if($currency != $baseCurrencyCode){
                         // $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
