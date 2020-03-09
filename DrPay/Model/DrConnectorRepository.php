@@ -12,6 +12,7 @@ use Digitalriver\DrPay\Model\DrConnectorFactory as ResourceDrConnector;
 use Magento\Framework\Json\Helper\Data as JsonHelperData;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Sales\Model\OrderFactory;
+use \Magento\Sales\Model\Order as Order;
 
 /**
  *
@@ -83,8 +84,8 @@ class DrConnectorRepository extends \Magento\Framework\Model\AbstractModel
                     if($order->getDrOrderState() != "Submitted"){ 
 						//update order status to processing as OFI means payment received
 						$order->setDrOrderState("Submitted"); 
-						$order->setState("processing"); 
-                        $order->setStatus("processing");
+						$order->setState(Order::STATE_PROCESSING); 
+                        $order->setStatus(Order::STATE_PROCESSING);
                         $order->save();
                     }
                     $model = $this->resource->create();
