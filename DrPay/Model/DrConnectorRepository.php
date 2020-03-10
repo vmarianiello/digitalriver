@@ -57,7 +57,7 @@ class DrConnectorRepository extends \Magento\Framework\Model\AbstractModel
   /**
    * {@inheritdoc}
    */
-    public function saveFullFillment($OrderLevelElectronicFulfillmentRequest)
+    public function saveFulFillment($OrderLevelElectronicFulfillmentRequest)
     {
 
         $response = [];

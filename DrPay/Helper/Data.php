@@ -611,11 +611,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 return;
             }
             $url = $this->getDrPostUrl();
-            $fullFillmentPost = $this->getFullFillmentPostRequest($order);
+            $fulFillmentPost = $this->getFulFillmentPostRequest($order);
             $this->curl->setOption(CURLOPT_RETURNTRANSFER, true);
             $this->curl->setOption(CURLOPT_TIMEOUT, 40);
             $this->curl->addHeader("Content-Type", "application/json");
-            $this->curl->post($url, $fullFillmentPost);
+            $this->curl->post($url, $fulFillmentPost);
             $result = $this->curl->getBody();
 			$statusCode = $this->curl->getStatus();
             if ($statusCode == "200") {
@@ -632,7 +632,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @param type $order
      * @return type
      */
-    public function getFullFillmentPostRequest($order)
+    public function getFulFillmentPostRequest($order)
     {
 
         $status = '';
