@@ -223,11 +223,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 $currency = $this->storeManager->getStore()->getCurrentCurrency()->getCode();
                 $baseCurrencyCode = $this->storeManager->getStore()->getBaseCurrencyCode();
                 foreach ($quote->getAllVisibleItems() as $item) {
-                    $type_code = \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE;
-                    if ($item->getProductType() == $type_code) {
-                        continue;
-                    }
-
                     $item = ($item->getParentItemId())?$item->getParentItem():$item;
                     $lineItem =  [];
                     $lineItem["quantity"] = $item->getQty();

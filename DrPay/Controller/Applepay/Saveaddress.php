@@ -36,11 +36,7 @@ class Saveaddress extends \Magento\Framework\App\Action\Action
           $itemsArr = [];
           $itemPrice = 0;
         foreach ($quote->getAllVisibleItems() as $item) {
-            if ($item->getProductType() == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE) {
-                $itemPrice = $item->getPrice();
-                continue;
-            }
-            $itemPrice = ($itemPrice>0)?$itemPrice:$item->getPrice();
+            $itemPrice = $item->getPrice();
             $itemsArr[] = [
                 'label' => $item->getName(),
                 'amount' => (float)number_format($itemPrice, 2, ".", ''),

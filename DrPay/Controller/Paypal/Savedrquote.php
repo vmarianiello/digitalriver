@@ -56,15 +56,10 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
             $taxAmnt = 0;
             $shipAmnt = 0;
             foreach ($quote->getAllVisibleItems() as $item) {
-                $type_code = \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE;
-                if ($item->getProductType() == $type_code) {
-                    $itemPrice = $item->getPrice();
-                    continue;
-                }
                 $itemsArr = [
                     'name' => $item->getName(),
                     'quantity' => $item->getQty(),
-                    'unitAmount' => ($itemPrice>0)?$itemPrice:$item->getPrice(),
+                    'unitAmount' => $item->getPrice(),
                 ];
             }
             $address = $quote->getShippingAddress();
