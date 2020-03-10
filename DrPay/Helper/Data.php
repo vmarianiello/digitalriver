@@ -222,7 +222,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 $lineItems = [];
                 $currency = $this->storeManager->getStore()->getCurrentCurrency()->getCode();
                 $baseCurrencyCode = $this->storeManager->getStore()->getBaseCurrencyCode();
-                foreach ($quote->getAllItems() as $item) {
+                foreach ($quote->getAllVisibleItems() as $item) {
                     $type_code = \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE;
                     if ($item->getProductType() == $type_code) {
                         continue;
@@ -245,7 +245,12 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     if ($price <= 0) {
                         $price = 0;
                     }
-                    $lineItem["product"] = ['id' => $item->getSku()];
+					$sku = $item->getSku();
+					$type_code = \Magento\Bundle\Model\Product\Type::TYPE_CODE;
+                    if ($item->getProductType() == $type_code) {
+                        $sku = $item->getProduct()->getData("sku");
+                    }
+                    $lineItem["product"] = ['id' => $sku];
                     //$lineItem["product"] = ['id' => '5321623900'];
                     $lineItem["pricing"]["salePrice"] = ['currency' => $currency, 'value' => round($price, 2)];
                     $lineItemLevelExtendedAttribute = ['name' => 'LineItemLevelExtendedAttribute1',

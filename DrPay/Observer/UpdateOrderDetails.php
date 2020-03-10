@@ -80,9 +80,9 @@ class UpdateOrderDetails implements ObserverInterface
 				}
 				$model->setLineItemIds($this->jsonHelper->jsonEncode($lineItemIds));
 				$model->save();
-				foreach ($order->getAllItems() as $item) {
+				foreach ($order->getAllVisibleItems() as $orderitem) {
 					foreach($lineItems as $item){
-						if($item->getSku() == $item["product"]['id']){
+						if($orderitem->getSku() == $item["product"]['id']){
 							//$item->setTaxAmount();
 							//break;
 						}

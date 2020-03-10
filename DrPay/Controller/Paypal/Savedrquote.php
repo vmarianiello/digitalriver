@@ -55,7 +55,7 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
             $itemPrice = 0;
             $taxAmnt = 0;
             $shipAmnt = 0;
-            foreach ($quote->getAllItems() as $item) {
+            foreach ($quote->getAllVisibleItems() as $item) {
                 $type_code = \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE;
                 if ($item->getProductType() == $type_code) {
                     $itemPrice = $item->getPrice();
