@@ -95,29 +95,7 @@ class Success extends \Magento\Framework\App\Action\Action
 						$this->_redirect('checkout/cart');
 						return;						
 					}
-					if (isset($result["submitCart"]["order"]["id"])) {
-						$orderId = $result["submitCart"]["order"]["id"];
-						$order->setDrOrderId($orderId);
-						$amount = $quote->getDrTax();
-						$order->setDrTax($amount); 
-						if($result["submitCart"]["order"]["orderState"]){
-							$order->setDrOrderState($result["submitCart"]["order"]["orderState"]);
-						}
-						if(isset($result["submitCart"]['lineItems']['lineItem'])){
-							$lineItems = $result["submitCart"]['lineItems']['lineItem'];
-							$model = $this->drconnector->load($orderId, 'requisition_id');
-							$model->setRequisitionId($orderId);
-							$lineItemIds = array();
-							foreach($lineItems as $item){
-								$qty = $item['quantity'];
-								$lineitemId = $item['id'];
-								$lineItemIds[] = ['qty' => $qty,'lineitemid' => $lineitemId];
-							}
-							$model->setLineItemIds($this->jsonHelper->jsonEncode($lineItemIds));
-							$model->save();
-						}
-					}
-					$order->save();
+					$this->_eventManager->dispatch('dr_place_order_success', ['order' => $order, 'quote' => $quote, 'result' => $result]);
 					$this->_redirect('checkout/onepage/success', ['_secure'=>true]);
 					return;
 				}
