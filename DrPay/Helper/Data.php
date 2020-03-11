@@ -219,6 +219,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 $orderLevelExtendedAttribute = ['name' => 'OrderLevelExtendedAttribute1', 'value' => 'test01'];
 
                 $data["cart"]["customAttributes"]["attribute"] = $orderLevelExtendedAttribute;
+				$data["cart"]["customAttributes"]["name"] = "TaxInclusiveOverride";
+				$data["cart"]["customAttributes"]["type"] = "Boolean";
+				$data["cart"]["customAttributes"]["value"] = "false";
                 $lineItems = [];
                 $currency = $this->storeManager->getStore()->getCurrentCurrency()->getCode();
                 $baseCurrencyCode = $this->storeManager->getStore()->getBaseCurrencyCode();
@@ -248,8 +251,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     $lineItem["product"] = ['id' => $sku];
                     //$lineItem["product"] = ['id' => '5321623900'];
                     $lineItem["pricing"]["salePrice"] = ['currency' => $currency, 'value' => round($price, 2)];
-                    $lineItemLevelExtendedAttribute = ['name' => 'LineItemLevelExtendedAttribute1',
-                    'value' => 'litest01'];
+					$lineItemLevelExtendedAttribute = ['name' => 'magento_quote_item_id',
+                'value' => $item->getId()];
                     $lineItem["customAttributes"]["attribute"] = $lineItemLevelExtendedAttribute;
                     $lineItems["lineItem"][] = $lineItem;
                 }
