@@ -215,6 +215,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     $url = $this->getDrBaseUrl() .
                     "v1/shoppers/me/carts/active?format=json&skipOfferArbitration=true";
                 }
+				$tax_inclusive = $this->scopeConfig->getValue('tax/calculation/price_includes_tax');
                 $data = [];
                 $orderLevelExtendedAttribute = ['name' => 'OrderLevelExtendedAttribute1', 'value' => 'test01'];
 
@@ -222,6 +223,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 				$data["cart"]["customAttributes"]["name"] = "TaxInclusiveOverride";
 				$data["cart"]["customAttributes"]["type"] = "Boolean";
 				$data["cart"]["customAttributes"]["value"] = "false";
+				if($tax_inclusive){
+					$data["cart"]["customAttributes"]["value"] = "true";
+				}
                 $lineItems = [];
                 $currency = $this->storeManager->getStore()->getCurrentCurrency()->getCode();
                 $baseCurrencyCode = $this->storeManager->getStore()->getBaseCurrencyCode();
@@ -230,6 +234,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     $lineItem =  [];
                     $lineItem["quantity"] = $item->getQty();
                     $price = $item->getPrice();
+					if($tax_inclusive){
+						$price = $item->getPriceInclTax();
+					}
                     $this->_logger->info("Currency: ".$currency .'!='. $baseCurrencyCode);
                    // if($currency != $baseCurrencyCode){
                         // $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
