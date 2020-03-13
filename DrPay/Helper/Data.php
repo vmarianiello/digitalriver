@@ -541,7 +541,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function createOrderInDr($accessToken)
     {
         if ($this->getDrBaseUrl() && $accessToken) {
-            $url = $this->getDrBaseUrl()."v1/shoppers/me/carts/active/submit-cart?expand=all&format=json";
+            $url = $this->getDrBaseUrl()."v1/shoppers/me/carts/active/submit-cart?expand=all&format=json&ipAddress=".$_SERVER['REMOTE_ADDR'];
             $data = [];
             $this->curl->setOption(CURLOPT_RETURNTRANSFER, true);
             $this->curl->setOption(CURLOPT_TIMEOUT, 40);
