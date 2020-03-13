@@ -83,8 +83,8 @@ class UpdateOrderDetails implements ObserverInterface
 				foreach ($order->getAllVisibleItems() as $orderitem) {
 					foreach($lineItems as $item){
 						if($orderitem->getSku() == $item["product"]['id']){
-							//$item->setTaxAmount();
-							//break;
+							$item->setDrOrderLineitemId($item['id']);
+							break;
 						}
 					}					
 				}
