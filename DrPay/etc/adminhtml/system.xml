@@ -159,7 +159,7 @@
                 	<label>Sort Order</label>
                 </field>
             </group> 
-            <group id="drpay_direct_debit" translate="label" type="text" sortOrder="56" showInDefault="1" showInWebsite="1" showInStore="1"> 
+            <group id="drpay_direct_debit" translate="label" type="text" sortOrder="57" showInDefault="1" showInWebsite="1" showInStore="1"> 
                 <label>Digital River Direct Debit Configuration</label>
                 <comment>Direct Debit Payment Method implemented with DigitalRiver.js</comment>
                 <field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
@@ -197,7 +197,7 @@
                     <label>Sort Order</label>
                 </field>
             </group>               
-            <group id="drpay_apple_pay" translate="label" type="text" sortOrder="56" showInDefault="1" showInWebsite="1" showInStore="1"> 
+            <group id="drpay_apple_pay" translate="label" type="text" sortOrder="58" showInDefault="1" showInWebsite="1" showInStore="1"> 
                 <label>Digital River Apple Pay Configuration</label>
                 <comment>Apple Pay Payment Method implemented with DigitalRiver.js</comment>
                 <field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
@@ -235,7 +235,7 @@
                     <label>Sort Order</label>
                 </field>
             </group>             
-            <group id="drpay_wire_transfer" translate="label" type="text" sortOrder="56" showInDefault="1" showInWebsite="1" showInStore="1"> 
+            <group id="drpay_wire_transfer" translate="label" type="text" sortOrder="59" showInDefault="1" showInWebsite="1" showInStore="1"> 
                 <label>Digital River Wire Transfer Configuration</label>
                 <comment>Wire Transfer Payment Method implemented with DigitalRiver.js</comment>
                 <field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
@@ -269,7 +269,39 @@
                 <field id="sort_order" translate="label" type="text" sortOrder="5" showInStore="1" showInWebsite="1" showInDefault="1">
                     <label>Sort Order</label>
                 </field>
-            </group> 
+            </group>
+            <group id="drpay_klarna" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Digital River Klarna Configuration</label>
+                <comment>Klarna Payment Method implemented with DigitalRiver.js</comment>
+                <field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Enable Klarna Payment</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="url" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                	<label>JS URL</label>
+                </field>
+                <field id="public_key" translate="label" type="text" sortOrder="3" showInStore="1" showInWebsite="1" showInDefault="1">
+                    <label>Public Key</label>
+                </field> 
+                <field id="allowspecific" translate="label" type="allowspecific" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Payment from Applicable Countries</label>
+                    <source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
+                </field>
+                <field id="specificcountry" translate="label" type="multiselect" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Payment from Specific Countries</label>
+                    <source_model>Magento\Directory\Model\Config\Source\Country</source_model>
+                    <can_be_empty>1</can_be_empty>
+                </field> 
+                <field id="allow_currency" translate="label" type="multiselect" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Allowed Currencies</label>
+                    <source_model>Magento\Config\Model\Config\Source\Locale\Currency</source_model>
+                    <backend_model>Magento\Config\Model\Config\Backend\Currency\Allow</backend_model>
+                    <can_be_empty>1</can_be_empty>
+                </field>               
+                <field id="sort_order" translate="label" type="text" sortOrder="5" showInStore="1" showInWebsite="1" showInDefault="1">
+                	<label>Sort Order</label>
+                </field>
+            </group>  
         </section>
     </system>
 </config>
