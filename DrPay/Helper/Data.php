@@ -76,21 +76,23 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Directory\Model\Region $regionModel,
         \Digitalriver\DrPay\Model\DrConnectorFactory $drFactory,
         \Magento\Framework\Json\Helper\Data $jsonHelper,
+		\Magento\Framework\HTTP\PhpEnvironment\RemoteAddress $remoteAddress,
         \Psr\Log\LoggerInterface $logger
     ) {
         $this->session = $session;
         $this->storeManager = $storeManager;
-         $this->productRepository = $productRepository;
+        $this->productRepository = $productRepository;
         $this->_cartManagement = $_cartManagement;
         $this->_customerSession = $_customerSession;
         $this->checkoutHelper = $checkoutHelper;
-         $this->regionModel = $regionModel;
-         $this->_enc = $enc;
-         $this->curl = $curl;
-         $this->jsonHelper = $jsonHelper;
+        $this->regionModel = $regionModel;
+        $this->_enc = $enc;
+        $this->curl = $curl;
+        $this->jsonHelper = $jsonHelper;
         $this->_enc = $enc;
         $this->drFactory = $drFactory;
-         $this->_logger = $logger;
+		$this->remoteAddress = $remoteAddress;
+        $this->_logger = $logger;
         parent::__construct($context);
     }
     /**
@@ -541,15 +543,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function createOrderInDr($accessToken)
     {
         if ($this->getDrBaseUrl() && $accessToken) {
-			if(!empty($_SERVER['HTTP_CLIENT_IP'])){
-				//ip from share internet
-				$ip = $_SERVER['HTTP_CLIENT_IP'];
-			}elseif(!empty($_SERVER['HTTP_X_FORWARDED_FOR'])){
-				//ip pass from proxy
-				$ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-			}else{
-				$ip = $_SERVER['REMOTE_ADDR'];
-			}
+			$ip = $this->remoteAddress->getRemoteAddress();
             $url = $this->getDrBaseUrl()."v1/shoppers/me/carts/active/submit-cart?expand=all&format=json&ipAddress=".$ip;
             $data = [];
             $this->curl->setOption(CURLOPT_RETURNTRANSFER, true);
