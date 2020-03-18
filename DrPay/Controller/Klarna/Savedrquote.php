@@ -64,6 +64,7 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
                 ];
             }
             $address = $quote->getShippingAddress();
+			$billingaddress = $quote->getBillingAddress();
             if ($quote->isVirtual()) {
                 $address = $quote->getBillingAddress();
             }
@@ -93,7 +94,7 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
                 $shipping =  [
                         'recipient' => $address->getFirstname()." ".$address->getLastname(),
                         'phoneNumber' => $address->getTelephone(),
-						'email' => $quote->getCustomerEmail(),
+						'email' => $billingaddress->getEmail(),
                         'address' =>  [
                             'line1' => $street1,
                             'line2' => $street2,
