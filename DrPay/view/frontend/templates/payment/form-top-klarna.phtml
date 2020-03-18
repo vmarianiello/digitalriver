@@ -47,7 +47,7 @@ function loadScriptKlarna(url, callback){
 								//jQuery(".checkout-billing-address .action-update").trigger("click");
 								//once cart created get the payment source id
 								var klarnaData = response.content.payload;
-								drklarnajs.createSource(klarnaData).then(function(result) {alert(JSON.stringify(result));
+								drklarnajs.createSource(klarnaData).then(function(result) {
 								    if (result.error) {
 								        console.log(result.error);
 										//Something went wrong, display the error message to the customer

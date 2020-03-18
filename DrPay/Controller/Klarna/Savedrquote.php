@@ -108,7 +108,6 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
             //Prepare the payload and return in response for DRJS klarna payload
             $payload['payload'] = [
                 'type' => 'klarnaCredit',
-                'reusable' => false,
                 'amount' => $quote->getGrandTotal(),
                 'currency' => $quote->getQuoteCurrencyCode(),
 				'owner' => [
@@ -116,19 +115,14 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
 					'lastName' => $address->getLastname(),
 					'email' => $quote->getCustomerEmail(),
 					'phoneNumber' => $address->getTelephone(),
-					'organization' => "DR",
 					'address' =>  [
 						'line1' => $street1,
-						'line2' => $street2,
 						'city' => (null !== $address->getCity())?$address->getCity():'na',
 						'state' => $state,
 						'country' => $address->getCountryId(),
 						'postalCode' => $address->getPostcode(),
 					],
-					'additionalAddressInfo' =>  [
-						'neighborhood' => "neighborhood",
-					],
-				],
+									],
                 'klarnaCredit' =>  [
 					"setPaidBefore" => true,
                     'returnUrl' => $returnurl,
