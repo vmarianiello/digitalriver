@@ -90,6 +90,7 @@ class UpdateOrderDetails implements ObserverInterface
 				}
 			}
 			$order->save();
+			$this->session->setDrAccessToken('');
 		}
     }
 }

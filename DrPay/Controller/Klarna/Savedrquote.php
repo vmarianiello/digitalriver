@@ -114,7 +114,7 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
 				'owner' => [
 					'firstName' => $address->getFirstname(),
 					'lastName' => $address->getLastname(),
-					'email' => $quote->getCustomerEmail(),
+					'email' => $billingaddress->getEmail(),
 					'phoneNumber' => $address->getTelephone(),
 					'address' =>  [
 						'line1' => $street1,
