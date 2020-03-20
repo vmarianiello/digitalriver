@@ -230,22 +230,15 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 				}
                 $lineItems = [];
                 $currency = $this->storeManager->getStore()->getCurrentCurrency()->getCode();
-                $baseCurrencyCode = $this->storeManager->getStore()->getBaseCurrencyCode();
                 foreach ($quote->getAllVisibleItems() as $item) {
                     $item = ($item->getParentItemId())?$item->getParentItem():$item;
                     $lineItem =  [];
                     $lineItem["quantity"] = $item->getQty();
-                    $price = $item->getPrice();
+                    $price = $item->getCalculationPrice();
 					if($tax_inclusive){
 						$price = $item->getPriceInclTax();
 					}
-                    $this->_logger->info("Currency: ".$currency .'!='. $baseCurrencyCode);
-                   // if($currency != $baseCurrencyCode){
-                        // $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-                        // $model = $objectManager->get('Magento\Directory\Helper\Data');
-                        // $price = $model->currencyConvert($price, $baseCurrencyCode, $currency);
-                        $this->updateAccessTokenCurrency($accessToken, $currency);
-                   // }
+                    $this->updateAccessTokenCurrency($accessToken, $currency);
                     if ($item->getDiscountAmount() > 0) {
                         $price = $price - ($item->getDiscountAmount()/$item->getQty());
                     }

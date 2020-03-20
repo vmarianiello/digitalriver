@@ -59,12 +59,11 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
                 $itemsArr = [
                     'name' => $item->getName(),
                     'quantity' => $item->getQty(),
-                    'unitAmount' => $item->getPrice(),
+                    'unitAmount' => $item->getCalculationPrice(),
                     'taxRate' => 0,
                 ];
             }
             $address = $quote->getShippingAddress();
-			$billingaddress = $quote->getBillingAddress();
             if ($quote->isVirtual()) {
                 $address = $quote->getBillingAddress();
             }
@@ -94,7 +93,7 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
                 $shipping =  [
                         'recipient' => $address->getFirstname()." ".$address->getLastname(),
                         'phoneNumber' => $address->getTelephone(),
-						'email' => $billingaddress->getEmail(),
+						'email' => $quote->getCustomerEmail() ? $quote->getCustomerEmail() : $this->_checkoutSession->getGuestCustomerEmail(),
                         'address' =>  [
                             'line1' => $street1,
                             'line2' => $street2,
@@ -113,8 +112,8 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
                 'currency' => $quote->getQuoteCurrencyCode(),
 				'owner' => [
 					'firstName' => $address->getFirstname(),
-					'lastName' => $address->getLastname(),
-					'email' => $billingaddress->getEmail(),
+					'lastName' => "McLaughlin",
+					'email' => $quote->getCustomerEmail() ? $quote->getCustomerEmail() : $this->_checkoutSession->getGuestCustomerEmail(),
 					'phoneNumber' => $address->getTelephone(),
 					'address' =>  [
 						'line1' => $street1,

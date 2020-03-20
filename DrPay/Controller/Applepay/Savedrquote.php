@@ -39,7 +39,7 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
             $itemsArr = [];
             $itemPrice = 0;
             foreach ($quote->getAllVisibleItems() as $item) {
-                $itemPrice = $item->getPrice();
+                $itemPrice = $item->getCalculationPrice();
                 $itemsArr[] = [
                     'label' => $item->getName(),
                     'amount' => (float)number_format($itemPrice, 2, ".", ''),

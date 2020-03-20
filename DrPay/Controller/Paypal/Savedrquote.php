@@ -59,7 +59,7 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
                 $itemsArr = [
                     'name' => $item->getName(),
                     'quantity' => $item->getQty(),
-                    'unitAmount' => $item->getPrice(),
+                    'unitAmount' => $item->getCalculationPrice(),
                 ];
             }
             $address = $quote->getShippingAddress();
