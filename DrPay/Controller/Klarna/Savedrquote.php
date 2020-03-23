@@ -59,7 +59,7 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
                 $itemsArr = [
                     'name' => $item->getName(),
                     'quantity' => $item->getQty(),
-                    'unitAmount' => $item->getCalculationPrice(),
+                    'unitAmount' => round($item->getCalculationPrice(), 2),
                     'taxRate' => 0,
                 ];
             }
@@ -108,7 +108,7 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
             //Prepare the payload and return in response for DRJS klarna payload
             $payload['payload'] = [
                 'type' => 'klarnaCredit',
-                'amount' => $quote->getGrandTotal(),
+                'amount' => round($quote->getGrandTotal(), 2),
                 'currency' => $quote->getQuoteCurrencyCode(),
 				'owner' => [
 					'firstName' => $address->getFirstname(),
@@ -128,8 +128,8 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
                     'returnUrl' => $returnurl,
                     'cancelUrl' => $cancelurl,
                     'items' => [$itemsArr],
-                    'taxAmount' => $taxAmnt,
-                    'shippingAmount' => $shipAmnt,
+                    'taxAmount' => round($taxAmnt, 2),
+                    'shippingAmount' => round($shipAmnt, 2),
                     'requestShipping' => true,
                     'shipping' => $shipping,
                 ],

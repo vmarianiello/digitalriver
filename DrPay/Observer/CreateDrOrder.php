@@ -63,11 +63,12 @@ class CreateDrOrder implements ObserverInterface
                 $currency = $this->_storeManager->getStore()->getCurrentCurrency()->getCode();
                 $grand_total = (int)round($quote->getGrandTotal());
                 //if($currency == $drCurrency && $grand_total == $dr_grand_total){
-                    $result = $this->helper->createOrderInDr($accessToken);
+				$cartresult = $this->helper->getDrCart();
+                $result = $this->helper->createOrderInDr($accessToken);
                 if ($result && isset($result["errors"])) {
                     throw new CouldNotSaveException(__('Unable to Place Order'));
                 } else {
-					$this->_eventManager->dispatch('dr_place_order_success', ['order' => $order, 'quote' => $quote, 'result' => $result]);
+					$this->_eventManager->dispatch('dr_place_order_success', ['order' => $order, 'quote' => $quote, 'result' => $result, 'cart_result' => $cartresult]);
                 }
             }
         }

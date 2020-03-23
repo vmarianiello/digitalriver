@@ -67,7 +67,8 @@ class Success extends \Magento\Framework\App\Action\Action
 			$resultRedirect = $this->resultRedirectFactory->create();
 			$fulldir        = explode('app/code',dirname(__FILE__));
 			$logfilename    = $fulldir[0] . 'var/log/drpay-wire.log';
-            $accessToken = $this->checkoutSession->getDrAccessToken();
+            $accessToken = $this->checkoutSession->getDrAccessToken();			
+			$cartresult = $this->helper->getDrCart();
 			$result = $this->helper->createOrderInDr($accessToken);
 			if($result && isset($result["errors"])){
 				file_put_contents($logfilename, " wire Order Failed "." Quote Id ".$quote->getId(). "\r\n"." -> OrderData".json_encode($result)."\r\n", FILE_APPEND);
@@ -96,7 +97,7 @@ class Success extends \Magento\Framework\App\Action\Action
 					return;						
 				}
 				
-				$this->_eventManager->dispatch('dr_place_order_success', ['order' => $order, 'quote' => $quote, 'result' => $result]);
+				$this->_eventManager->dispatch('dr_place_order_success', ['order' => $order, 'quote' => $quote, 'result' => $result, 'cart_result' => $cartresult]);
 				$this->_redirect('checkout/onepage/success', array('_secure'=>true));
 				return;
 			}

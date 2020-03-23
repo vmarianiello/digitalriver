@@ -53,6 +53,7 @@ class UpdateOrderDetails implements ObserverInterface
 		$order = $observer->getEvent()->getOrder();
 		$quote = $observer->getEvent()->getQuote();
 		$result = $observer->getEvent()->getResult();
+		$cartresult = $observer->getEvent()->getCartResult();
 		//print_r($result);die;
 		if(isset($result["submitCart"]["order"]["id"])){
 			if(isset($result["submitCart"]['paymentMethod']['wireTransfer'])){
@@ -83,10 +84,30 @@ class UpdateOrderDetails implements ObserverInterface
 				foreach ($order->getAllVisibleItems() as $orderitem) {
 					foreach($lineItems as $item){
 						if($orderitem->getSku() == $item["product"]['id']){
-							$item->setDrOrderLineitemId($item['id']);
+							$orderitem->setDrOrderLineitemId($item['id']);
+							$orderitem->save();
 							break;
 						}
-					}					
+					}
+					$lineItems = $cartresult["cart"]['lineItems']['lineItem'];
+					foreach($lineItems as $item){
+						if($orderitem->getSku() == $item["product"]['id']){
+							$qty = $item['quantity'];
+							$listprice = $item["pricing"];
+							if(isset($listprice["tax"]['value'])){
+								$total_tax_amount = $listprice["tax"]['value'];
+								$tax_amount = $total_tax_amount/$qty;
+								$orderitem->setTaxAmount($total_tax_amount);
+								if(isset($listprice["taxRate"])){
+									$orderitem->setTaxPercent($listprice["taxRate"] * 100);
+								}
+								$orderitem->setPriceInclTax($orderitem->getPrice() + $tax_amount);
+								$orderitem->setRowTotalInclTax($orderitem->getRowTotal() + $total_tax_amount);
+								$orderitem->save();
+								break;
+							}
+						}
+					}
 				}
 			}
 			$order->save();

@@ -486,6 +486,26 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $encrypt = trim(openssl_encrypt($data, $method, $key, 0, $key));
         return $encrypt;
     }
+	
+    /**
+     * @return array|null
+     */
+    public function getDrCart()
+    {
+		$result = "";
+        if ($this->getDrBaseUrl() && $this->session->getDrAccessToken()) {
+            $accessToken = $this->session->getDrAccessToken();
+            $url = $this->getDrBaseUrl()."v1/shoppers/me/carts/active?format=json&expand=all";
+            
+            $this->curl->setOption(CURLOPT_RETURNTRANSFER, true);
+            $this->curl->addHeader("Content-Type", "application/json");
+            $this->curl->addHeader("Authorization", "Bearer " . $accessToken);
+            $this->curl->get($url);
+            $result = $this->curl->getBody();
+            $result = json_decode($result, true);
+        }
+        return $result;
+	}
     /**
      * @param  mixed $accessToken
      * @return mixed|null
