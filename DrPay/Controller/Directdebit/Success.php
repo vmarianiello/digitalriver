@@ -69,6 +69,7 @@ class Success extends \Magento\Framework\App\Action\Action
 				$source_id = $this->getRequest()->getParam('sourceId');
 				$accessToken = $this->checkoutSession->getDrAccessToken();
 				$paymentResult = $this->helper->applyQuotePayment($source_id);
+				$cartresult = $this->helper->getDrCart();
 				$result = $this->helper->createOrderInDr($accessToken);
 				if ($result && isset($result["errors"])) {
 					$this->messageManager->addError(__('Unable to Place Order!! Payment has been failed'));
@@ -95,7 +96,7 @@ class Success extends \Magento\Framework\App\Action\Action
 						$this->_redirect('checkout/cart');
 						return;						
 					}
-					$this->_eventManager->dispatch('dr_place_order_success', ['order' => $order, 'quote' => $quote, 'result' => $result]);
+					$this->_eventManager->dispatch('dr_place_order_success', ['order' => $order, 'quote' => $quote, 'result' => $result, 'cart_result' => $cartresult]);
 					$this->_redirect('checkout/onepage/success', ['_secure'=>true]);
 					return;
 				}
