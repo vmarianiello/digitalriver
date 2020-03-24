@@ -67,14 +67,11 @@ class Success extends \Magento\Framework\App\Action\Action
 			$resultRedirect = $this->resultRedirectFactory->create();
 			$fulldir        = explode('app/code',dirname(__FILE__));
 			$logfilename    = $fulldir[0] . 'var/log/drpay-wire.log';
-            $source_id = $this->getRequest()->getParam('sourceId');
-            $accessToken = $this->checkoutSession->getDrAccessToken();
-            $paymentResult = $this->helper->applyQuotePayment($source_id);
+            $accessToken = $this->checkoutSession->getDrAccessToken();			
+			$cartresult = $this->helper->getDrCart();
 			$result = $this->helper->createOrderInDr($accessToken);
-			file_put_contents($logfilename, "Source Id: ".$this->getRequest()->getParam('sourceId')." wire Order Failed "." OrderId ".$quote->getId(). "\r\n"." -> OrderData".json_encode($result)."\r\n"." Payment Data: ->".json_encode($paymentResult)."\r\n", FILE_APPEND);
-
 			if($result && isset($result["errors"])){
-				file_put_contents($logfilename, "Source Id: ".$this->getRequest()->getParam('sourceId')." wire Order Failed "." OrderId ".$quote->getId(). "\r\n"." -> OrderData".json_encode($result)."\r\n"." Payment Data: ->".json_encode($paymentResult)."\r\n", FILE_APPEND);
+				file_put_contents($logfilename, " wire Order Failed "." Quote Id ".$quote->getId(). "\r\n"." -> OrderData".json_encode($result)."\r\n", FILE_APPEND);
 				$this->messageManager->addError(__('Unable to Place Order!! Payment has been failed'));
 				return $resultRedirect->setPath('checkout/cart');
 			}else{ 				
@@ -99,32 +96,8 @@ class Success extends \Magento\Framework\App\Action\Action
 					$this->_redirect('checkout/cart');
 					return;						
 				}
-                $paymentData = $result["submitCart"]['paymentMethod']['wireTransfer'];
-                // $paymentData = json_decode($paymentData, true);
-				if(isset($result["submitCart"]["order"]["id"]) && is_array($paymentData)){
-                    $order->getPayment()->setAdditionalInformation($paymentData);
-					$orderId = $result["submitCart"]["order"]["id"];
-					$order->setDrOrderId($orderId);
-					$amount = $quote->getDrTax();
-					$order->setDrTax($amount);  
-					if($result["submitCart"]["order"]["orderState"]){
-						$order->setDrOrderState($result["submitCart"]["order"]["orderState"]);
-					}
-					if(isset($result["submitCart"]['lineItems']['lineItem'])){
-						$lineItems = $result["submitCart"]['lineItems']['lineItem'];
-						$model = $this->drconnector->load($orderId, 'requisition_id');
-						$model->setRequisitionId($orderId);
-						$lineItemIds = array();
-						foreach($lineItems as $item){
-							$qty = $item['quantity'];
-							$lineitemId = $item['id'];
-							$lineItemIds[] = ['qty' => $qty,'lineitemid' => $lineitemId];
-						}
-						$model->setLineItemIds($this->jsonHelper->jsonEncode($lineItemIds));
-						$model->save();
-					}
-				}
-				$order->save();
+				
+				$this->_eventManager->dispatch('dr_place_order_success', ['order' => $order, 'quote' => $quote, 'result' => $result, 'cart_result' => $cartresult]);
 				$this->_redirect('checkout/onepage/success', array('_secure'=>true));
 				return;
 			}

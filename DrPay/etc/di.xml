@@ -11,6 +11,9 @@
 	<type name="Magento\Quote\Model\Quote">
         <plugin name="create_dr_quote" type="Digitalriver\DrPay\Plugin\QuotePlugin" sortOrder="1"/>
     </type> 
+	<type name="Magento\Quote\Model\Quote\Address">
+        <plugin name="create_dr_quote" type="Digitalriver\DrPay\Plugin\QuoteAddressPlugin" sortOrder="1"/>
+    </type> 
 	<type name="Magento\Customer\Model\AccountManagement">
         <plugin name="set_guest_email" type="Digitalriver\DrPay\Plugin\AccountManagementPlugin" sortOrder="1"/>
     </type>  

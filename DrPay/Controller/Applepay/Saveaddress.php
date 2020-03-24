@@ -35,12 +35,8 @@ class Saveaddress extends \Magento\Framework\App\Action\Action
           $payload = [];
           $itemsArr = [];
           $itemPrice = 0;
-        foreach ($quote->getAllItems() as $item) {
-            if ($item->getProductType() == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE) {
-                $itemPrice = $item->getPrice();
-                continue;
-            }
-            $itemPrice = ($itemPrice>0)?$itemPrice:$item->getPrice();
+        foreach ($quote->getAllVisibleItems() as $item) {
+            $itemPrice = $item->getCalculationPrice();
             $itemsArr[] = [
                 'label' => $item->getName(),
                 'amount' => (float)number_format($itemPrice, 2, ".", ''),

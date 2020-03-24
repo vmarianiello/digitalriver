@@ -64,6 +64,17 @@
                 <title><![CDATA[Wire Transfer]]></title>
                 <instructions><![CDATA[Make a payment with Wire Transfer]]></instructions>
             </drpay_wire_transfer>
+            <drpay_klarna>
+                <active>0</active>
+                <url>https://js.digitalriverws.com/v1/DigitalRiver.js</url>
+                <sort_order>1</sort_order>
+                <model>Digitalriver\DrPay\Model\Klarna</model>
+                <order_status>pending_payment</order_status>
+                <allowspecific>0</allowspecific>
+                <sort_order>1</sort_order>
+                <title><![CDATA[Klarna]]></title>
+                <instructions><![CDATA[Make a payment from your new or existing Klarna account.]]></instructions>
+            </drpay_klarna> 
         </payment>
     </default>
 </config>

@@ -4,7 +4,7 @@
  * @category Digitalriver
  * @package  Digitalriver_DrPay
  */
-namespace Digitalriver\DrPay\Controller\Fullfillment;
+namespace Digitalriver\DrPay\Controller\Fulfillment;
 
 use Magento\Framework\View\Result\PageFactory;
 use Magento\Framework\App\Action\Context;
@@ -48,7 +48,7 @@ class Index extends \Magento\Framework\App\Action\Action implements CsrfAwareAct
         $responseContent = [];
         if (is_array($data) && isset($data['OrderLevelElectronicFulfillmentRequest'])) {
             $orderLevelElectronicFulfillmentRequest = $data['OrderLevelElectronicFulfillmentRequest'];
-            $responseContent = $this->drConnectorRepositoryFactory->Create()->saveFullFillment($orderLevelElectronicFulfillmentRequest);
+            $responseContent = $this->drConnectorRepositoryFactory->Create()->saveFulFillment($orderLevelElectronicFulfillmentRequest);
             $responseContent = $responseContent;
         } else {
             $responseContent = ["error" => "Invalid Request"];

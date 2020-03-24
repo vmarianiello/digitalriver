@@ -16,11 +16,11 @@ namespace Digitalriver\DrPay\Api;
 interface DrConnectorRepositoryInterface {
 
     /**
-     * Save the FullFillmentRequest
+     * Save the FulFillmentRequest
      *
      * @param mixed
      * @return string[]
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
-    public function SaveFullFillment($OrderLevelElectronicFulfillmentRequest);
+    public function SaveFulFillment($OrderLevelElectronicFulfillmentRequest);
 }

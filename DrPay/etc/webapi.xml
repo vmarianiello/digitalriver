@@ -8,8 +8,8 @@
 -->
 <routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Webapi:etc/webapi.xsd">
-    <route url="/V1/dr/fullfillment" method="POST">
-        <service class="Digitalriver\DrPay\Api\DrConnectorRepositoryInterface" method="SaveFullFillment"/>
+    <route url="/V1/dr/fulfillment" method="POST">
+        <service class="Digitalriver\DrPay\Api\DrConnectorRepositoryInterface" method="SaveFulFillment"/>
         <resources>
             <resource ref="anonymous" />
         </resources>

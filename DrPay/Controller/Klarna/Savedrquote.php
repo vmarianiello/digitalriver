@@ -5,7 +5,7 @@
  * @package  Digitalriver_DrPay
  */
 
-namespace Digitalriver\DrPay\Controller\Paypal;
+namespace Digitalriver\DrPay\Controller\Klarna;
 
 use Magento\Framework\Controller\ResultFactory;
 
@@ -48,8 +48,8 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
         $cartResult = $this->helper->createFullCartInDr($quote, 1);
         if ($cartResult) {
             $payload = [];
-            $returnurl = $this->_url->getUrl('drpay/paypal/success');
-            $cancelurl = $this->_url->getUrl('drpay/paypal/cancel');
+            $returnurl = $this->_url->getUrl('drpay/klarna/success');
+            $cancelurl = $this->_url->getUrl('drpay/klarna/cancel');
             $itemsArr = [];
             $shipping = [];
             $itemPrice = 0;
@@ -59,7 +59,8 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
                 $itemsArr[] = [
                     'name' => $item->getName(),
                     'quantity' => $item->getQty(),
-                    'unitAmount' => $item->getCalculationPrice(),
+                    'unitAmount' => round($item->getCalculationPrice(), 2),
+                    'taxRate' => 0,
                 ];
             }
             $address = $quote->getShippingAddress();
@@ -92,6 +93,7 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
                 $shipping =  [
                         'recipient' => $address->getFirstname()." ".$address->getLastname(),
                         'phoneNumber' => $address->getTelephone(),
+						'email' => $quote->getCustomerEmail() ? $quote->getCustomerEmail() : $this->_checkoutSession->getGuestCustomerEmail(),
                         'address' =>  [
                             'line1' => $street1,
                             'line2' => $street2,
@@ -102,21 +104,33 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
                         ],
                     ];
             }
-
-
         
-            //Prepare the payload and return in response for DRJS paypal payload
+            //Prepare the payload and return in response for DRJS klarna payload
             $payload['payload'] = [
-                'type' => 'payPal',
-                'amount' => (int)round($quote->getGrandTotal()),
+                'type' => 'klarnaCredit',
+                'amount' => round($quote->getGrandTotal(), 2),
                 'currency' => $quote->getQuoteCurrencyCode(),
-                'payPal' =>  [
+				'owner' => [
+					'firstName' => $address->getFirstname(),
+					'lastName' => "McLaughlin",
+					'email' => $quote->getCustomerEmail() ? $quote->getCustomerEmail() : $this->_checkoutSession->getGuestCustomerEmail(),
+					'phoneNumber' => $address->getTelephone(),
+					'address' =>  [
+						'line1' => $street1,
+						'city' => (null !== $address->getCity())?$address->getCity():'na',
+						'state' => $state,
+						'country' => $address->getCountryId(),
+						'postalCode' => $address->getPostcode(),
+					],
+									],
+                'klarnaCredit' =>  [
+					"setPaidBefore" => true,
                     'returnUrl' => $returnurl,
                     'cancelUrl' => $cancelurl,
                     'items' => $itemsArr,
-                    'taxAmount' => $taxAmnt,
-                    'shippingAmount' => $shipAmnt,
-                    'amountsEstimated' => true,
+                    'taxAmount' => round($taxAmnt, 2),
+                    'shippingAmount' => round($shipAmnt, 2),
+                    'requestShipping' => true,
                     'shipping' => $shipping,
                 ],
             ];

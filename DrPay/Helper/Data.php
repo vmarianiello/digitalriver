@@ -76,21 +76,23 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Directory\Model\Region $regionModel,
         \Digitalriver\DrPay\Model\DrConnectorFactory $drFactory,
         \Magento\Framework\Json\Helper\Data $jsonHelper,
+		\Magento\Framework\HTTP\PhpEnvironment\RemoteAddress $remoteAddress,
         \Psr\Log\LoggerInterface $logger
     ) {
         $this->session = $session;
         $this->storeManager = $storeManager;
-         $this->productRepository = $productRepository;
+        $this->productRepository = $productRepository;
         $this->_cartManagement = $_cartManagement;
         $this->_customerSession = $_customerSession;
         $this->checkoutHelper = $checkoutHelper;
-         $this->regionModel = $regionModel;
-         $this->_enc = $enc;
-         $this->curl = $curl;
-         $this->jsonHelper = $jsonHelper;
+        $this->regionModel = $regionModel;
+        $this->_enc = $enc;
+        $this->curl = $curl;
+        $this->jsonHelper = $jsonHelper;
         $this->_enc = $enc;
         $this->drFactory = $drFactory;
-         $this->_logger = $logger;
+		$this->remoteAddress = $remoteAddress;
+        $this->_logger = $logger;
         parent::__construct($context);
     }
     /**
@@ -215,41 +217,44 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     $url = $this->getDrBaseUrl() .
                     "v1/shoppers/me/carts/active?format=json&skipOfferArbitration=true";
                 }
+				$tax_inclusive = $this->scopeConfig->getValue('tax/calculation/price_includes_tax');
                 $data = [];
                 $orderLevelExtendedAttribute = ['name' => 'OrderLevelExtendedAttribute1', 'value' => 'test01'];
 
                 $data["cart"]["customAttributes"]["attribute"] = $orderLevelExtendedAttribute;
+				$data["cart"]["customAttributes"]["name"] = "TaxInclusiveOverride";
+				$data["cart"]["customAttributes"]["type"] = "Boolean";
+				$data["cart"]["customAttributes"]["value"] = "false";
+				if($tax_inclusive){
+					$data["cart"]["customAttributes"]["value"] = "true";
+				}
                 $lineItems = [];
                 $currency = $this->storeManager->getStore()->getCurrentCurrency()->getCode();
-                $baseCurrencyCode = $this->storeManager->getStore()->getBaseCurrencyCode();
-                foreach ($quote->getAllItems() as $item) {
-                    $type_code = \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE;
-                    if ($item->getProductType() == $type_code) {
-                        continue;
-                    }
-
+                foreach ($quote->getAllVisibleItems() as $item) {
                     $item = ($item->getParentItemId())?$item->getParentItem():$item;
                     $lineItem =  [];
                     $lineItem["quantity"] = $item->getQty();
-                    $price = $item->getPriceInclTax();
-                    $this->_logger->info("Currency: ".$currency .'!='. $baseCurrencyCode);
-                   // if($currency != $baseCurrencyCode){
-                        // $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-                        // $model = $objectManager->get('Magento\Directory\Helper\Data');
-                        // $price = $model->currencyConvert($price, $baseCurrencyCode, $currency);
-                        $this->updateAccessTokenCurrency($accessToken, $currency);
-                   // }
+                    $price = $item->getCalculationPrice();
+					if($tax_inclusive){
+						$price = $item->getPriceInclTax();
+					}
+                    $this->updateAccessTokenCurrency($accessToken, $currency);
                     if ($item->getDiscountAmount() > 0) {
                         $price = $price - ($item->getDiscountAmount()/$item->getQty());
                     }
                     if ($price <= 0) {
                         $price = 0;
                     }
-                    $lineItem["product"] = ['id' => $item->getSku()];
+					$sku = $item->getSku();
+					$type_code = \Magento\Bundle\Model\Product\Type::TYPE_CODE;
+                    if ($item->getProductType() == $type_code) {
+                        $sku = $item->getProduct()->getData("sku");
+                    }
+                    $lineItem["product"] = ['id' => $sku];
                     //$lineItem["product"] = ['id' => '5321623900'];
                     $lineItem["pricing"]["salePrice"] = ['currency' => $currency, 'value' => round($price, 2)];
-                    $lineItemLevelExtendedAttribute = ['name' => 'LineItemLevelExtendedAttribute1',
-                    'value' => 'litest01'];
+					$lineItemLevelExtendedAttribute = ['name' => 'magento_quote_item_id',
+                'value' => $item->getId()];
                     $lineItem["customAttributes"]["attribute"] = $lineItemLevelExtendedAttribute;
                     $lineItems["lineItem"][] = $lineItem;
                 }
@@ -481,6 +486,26 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $encrypt = trim(openssl_encrypt($data, $method, $key, 0, $key));
         return $encrypt;
     }
+	
+    /**
+     * @return array|null
+     */
+    public function getDrCart()
+    {
+		$result = "";
+        if ($this->getDrBaseUrl() && $this->session->getDrAccessToken()) {
+            $accessToken = $this->session->getDrAccessToken();
+            $url = $this->getDrBaseUrl()."v1/shoppers/me/carts/active?format=json&expand=all";
+            
+            $this->curl->setOption(CURLOPT_RETURNTRANSFER, true);
+            $this->curl->addHeader("Content-Type", "application/json");
+            $this->curl->addHeader("Authorization", "Bearer " . $accessToken);
+            $this->curl->get($url);
+            $result = $this->curl->getBody();
+            $result = json_decode($result, true);
+        }
+        return $result;
+	}
     /**
      * @param  mixed $accessToken
      * @return mixed|null
@@ -531,7 +556,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function createOrderInDr($accessToken)
     {
         if ($this->getDrBaseUrl() && $accessToken) {
-            $url = $this->getDrBaseUrl()."v1/shoppers/me/carts/active/submit-cart?expand=all&format=json";
+			$ip = $this->remoteAddress->getRemoteAddress();
+            $url = $this->getDrBaseUrl()."v1/shoppers/me/carts/active/submit-cart?expand=all&format=json&ipAddress=".$ip;
             $data = [];
             $this->curl->setOption(CURLOPT_RETURNTRANSFER, true);
             $this->curl->setOption(CURLOPT_TIMEOUT, 40);
@@ -611,11 +637,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 return;
             }
             $url = $this->getDrPostUrl();
-            $fullFillmentPost = $this->getFullFillmentPostRequest($order);
+            $fulFillmentPost = $this->getFulFillmentPostRequest($order);
             $this->curl->setOption(CURLOPT_RETURNTRANSFER, true);
             $this->curl->setOption(CURLOPT_TIMEOUT, 40);
             $this->curl->addHeader("Content-Type", "application/json");
-            $this->curl->post($url, $fullFillmentPost);
+            $this->curl->post($url, $fulFillmentPost);
             $result = $this->curl->getBody();
 			$statusCode = $this->curl->getStatus();
             if ($statusCode == "200") {
@@ -632,7 +658,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @param type $order
      * @return type
      */
-    public function getFullFillmentPostRequest($order)
+    public function getFulFillmentPostRequest($order)
     {
 
         $status = '';

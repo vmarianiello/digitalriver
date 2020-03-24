@@ -10,6 +10,7 @@
             <block ifconfig="payment/drpay_direct_debit/active" class="Magento\Framework\View\Element\Template" name="dr_direct_debit_form_top" before="checkout.root" cacheable="false" template="Digitalriver_DrPay::payment/form-top-direct_debit.phtml"/> 
             <block ifconfig="payment/drpay_apple_pay/active" class="Magento\Framework\View\Element\Template" name="dr_apple_pay_form_top" before="checkout.root" cacheable="false" template="Digitalriver_DrPay::payment/form-top-apple_pay.phtml"/>
             <block ifconfig="payment/drpay_wire_transfer/active" class="Magento\Framework\View\Element\Template" name="drpay_wire_transfer_form_top" before="checkout.root" cacheable="false" template="Digitalriver_DrPay::payment/form-top-wire_transfer.phtml"/>
+            <block ifconfig="payment/drpay_klarna/active" class="Magento\Framework\View\Element\Template" name="dr_klarna_form_top" before="checkout.root" cacheable="false" template="Digitalriver_DrPay::payment/form-top-klarna.phtml"/> 
         </referenceContainer>        
         <referenceBlock name="checkout.root">
             <arguments>
@@ -63,6 +64,14 @@
                                                                     <item name="component" xsi:type="string">Digitalriver_DrPay/js/view/payment/wire_transfer</item>
                                                                     <item name="methods" xsi:type="array">
                                                                         <item name="drpay_wire_transfer" xsi:type="array">
+                                                                            <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
+                                                                        </item>
+                                                                    </item>
+                                                                </item>
+                                                                <item name="drpay_klarna-payment" xsi:type="array">
+                                                                    <item name="component" xsi:type="string">Digitalriver_DrPay/js/view/payment/klarna</item>
+                                                                    <item name="methods" xsi:type="array">
+                                                                        <item name="drpay_klarna" xsi:type="array">
                                                                             <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
                                                                         </item>
                                                                     </item>

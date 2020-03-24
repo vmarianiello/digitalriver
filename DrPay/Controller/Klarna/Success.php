@@ -1,12 +1,17 @@
 <?php
-
-namespace Digitalriver\DrPay\Controller\Directdebit;
+/**
+ *
+ * @category Digitalriver
+ * @package  Digitalriver_DrPay
+ */
+namespace Digitalriver\DrPay\Controller\Klarna;
 
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\Action\Context;
-use \Magento\Sales\Model\Order;
-use \Magento\Quote\Model\QuoteFactory;
 
+/**
+ * Class Success
+ */
 class Success extends \Magento\Framework\App\Action\Action
 {
     /**
@@ -21,11 +26,22 @@ class Success extends \Magento\Framework\App\Action\Action
      * @var \Magento\Checkout\Model\Session
      */
     protected $checkoutSession;
+        /**
+         * @var \Magento\Quote\Model\QuoteFactory
+         */
     protected $quoteFactory;
+        /**
+         * @var \Magento\Directory\Model\Region
+         */
     protected $regionModel;
     /**
      * @param \Magento\Framework\App\Action\Context $context
-     * @param \Magento\Customer\Model\Session $customerSession
+     * @param \Magento\Customer\Model\Session       $customerSession
+     * \Magento\Sales\Model\Order $order
+     * \Magento\Checkout\Model\Session $checkoutSession
+     * \Digitalriver\DrPay\Helper\Data $helper
+     * \Magento\Directory\Model\Region $regionModel
+     * \Magento\Quote\Model\QuoteFactory $quoteFactory
      */
 
     public function __construct(
@@ -38,7 +54,7 @@ class Success extends \Magento\Framework\App\Action\Action
 		\Digitalriver\DrPay\Model\DrConnector $drconnector,
 		\Magento\Framework\Json\Helper\Data $jsonHelper,
 		\Magento\Quote\Api\CartManagementInterface $quoteManagement,
-        QuoteFactory $quoteFactory
+        \Magento\Quote\Model\QuoteFactory $quoteFactory
     ) {
         $this->customerSession = $customerSession;
         $this->order = $order;
@@ -48,18 +64,18 @@ class Success extends \Magento\Framework\App\Action\Action
         $this->regionModel = $regionModel;
         $this->drconnector = $drconnector;
 		$this->jsonHelper = $jsonHelper;
-		$this->quoteManagement = $quoteManagement; 
+		$this->quoteManagement = $quoteManagement;
         return parent::__construct($context);
     }
     
     /**
-     * Returned From Payment Gateway
+     * Klarna Success response
      *
-     * @return void
+     * @return mixed|null
      */
     public function execute()
     {
-		$quote = $this->checkoutSession->getQuote();
+        $quote = $this->checkoutSession->getQuote();
 		if($quote && $quote->getId() && $quote->getIsActive()){
 			/**
 			 * @var \Magento\Framework\Controller\Result\Redirect $resultRedirect
@@ -74,7 +90,7 @@ class Success extends \Magento\Framework\App\Action\Action
 				if ($result && isset($result["errors"])) {
 					$this->messageManager->addError(__('Unable to Place Order!! Payment has been failed'));
 					return $resultRedirect->setPath('checkout/cart');
-				} else {			
+				} else {
 					// "last successful quote"
 					$quoteId = $quote->getId();
 					$this->checkoutSession->setLastQuoteId($quoteId)->setLastSuccessQuoteId($quoteId);
@@ -96,6 +112,7 @@ class Success extends \Magento\Framework\App\Action\Action
 						$this->_redirect('checkout/cart');
 						return;						
 					}
+					
 					$this->_eventManager->dispatch('dr_place_order_success', ['order' => $order, 'quote' => $quote, 'result' => $result, 'cart_result' => $cartresult]);
 					$this->_redirect('checkout/onepage/success', ['_secure'=>true]);
 					return;
