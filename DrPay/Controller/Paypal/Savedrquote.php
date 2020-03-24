@@ -56,7 +56,7 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
             $taxAmnt = 0;
             $shipAmnt = 0;
             foreach ($quote->getAllVisibleItems() as $item) {
-                $itemsArr = [
+                $itemsArr[] = [
                     'name' => $item->getName(),
                     'quantity' => $item->getQty(),
                     'unitAmount' => $item->getCalculationPrice(),
@@ -113,7 +113,7 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
                 'payPal' =>  [
                     'returnUrl' => $returnurl,
                     'cancelUrl' => $cancelurl,
-                    'items' => [$itemsArr],
+                    'items' => $itemsArr,
                     'taxAmount' => $taxAmnt,
                     'shippingAmount' => $shipAmnt,
                     'amountsEstimated' => true,

@@ -56,7 +56,7 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
             $taxAmnt = 0;
             $shipAmnt = 0;
             foreach ($quote->getAllVisibleItems() as $item) {
-                $itemsArr = [
+                $itemsArr[] = [
                     'name' => $item->getName(),
                     'quantity' => $item->getQty(),
                     'unitAmount' => round($item->getCalculationPrice(), 2),
@@ -127,7 +127,7 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
 					"setPaidBefore" => true,
                     'returnUrl' => $returnurl,
                     'cancelUrl' => $cancelurl,
-                    'items' => [$itemsArr],
+                    'items' => $itemsArr,
                     'taxAmount' => round($taxAmnt, 2),
                     'shippingAmount' => round($shipAmnt, 2),
                     'requestShipping' => true,
