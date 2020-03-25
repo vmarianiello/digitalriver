@@ -100,6 +100,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function convertTokenToFullAccessToken()
     {
+		if ($this->session->getDrAccessToken()) {
+			$token = $this->session->getDrAccessToken();
+			$checktoken = $this->checkDrAccessTokenValidation($token);
+			if($checktoken){
+				return;
+			}
+		}
         $quote = $this->session->getQuote();
         $address = $quote->getBillingAddress();
         if ($this->_customerSession->isLoggedIn()) {
@@ -139,6 +146,30 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $this->_logger->error("Error in Token request.".$e->getMessage());
         }
     }
+
+	public function checkDrAccessTokenValidation($token){
+		if($token){			
+			$url = $this->getDrBaseUrl()."oauth20/access-tokens?token=".$token."&format=json";
+			$ch = curl_init($url);
+			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+			 
+			$result = curl_exec($ch);
+			curl_close($ch);
+			
+			$result = json_decode($result, true);
+			$currency = $this->storeManager->getStore()->getCurrentCurrency()->getCode();
+			if($result["currency"] != $currency){
+				$this->updateAccessTokenCurrency($token, $currency);
+			}
+			if(isset($result["expiresIn"]) && $result["expiresIn"] > 1000){
+				return true;
+			}
+		}
+		return false;
+	}
+
     /**
      * @return null
      */
@@ -180,7 +211,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $apikey = $this->getDrApiKey();
             $locale = $this->getLocale();
             $drBaseUrl = $this->getDrBaseUrl();
-            $this->_logger->info("API Key: ".$apikey .'Locale'. $locale. 'drBaseUrl'.$drBaseUrl);
             if ($apikey && $locale && $drBaseUrl) {
                 $data = [];
                 $url = $this->getDrBaseUrl()."v1/shoppers/me?locale=".$locale."&currency=".$currentCurrency."&format=json";
