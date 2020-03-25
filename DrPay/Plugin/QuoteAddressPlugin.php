@@ -50,8 +50,6 @@ class QuoteAddressPlugin
         if ($enableDrPayValue) {
 			$quote = $subject->getQuote();
             if (!$quote->isVirtual()) {
-                // Create Shopper and get Full access token
-                $this->drHelper->convertTokenToFullAccessToken();
                 //Create the cart in DR
                 $this->drHelper->createFullCartInDr($quote);
             }
