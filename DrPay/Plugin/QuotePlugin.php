@@ -73,8 +73,6 @@ class QuotePlugin
         $enableDrPayValue = $this->getDrPayEnable();
         if ($enableDrPayValue) {
             if ($subject->isVirtual()) {
-                // Create Shopper and get Full access token
-                $this->drHelper->convertTokenToFullAccessToken();
                 //Create the cart in DR
                 $this->drHelper->createFullCartInDr($subject);
             }
