@@ -100,13 +100,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function convertTokenToFullAccessToken()
     {
-		if ($this->session->getDrAccessToken()) {
-			$token = $this->session->getDrAccessToken();
-			$checktoken = $this->checkDrAccessTokenValidation($token);
-			if($checktoken){
-				return;
-			}
-		}
         $quote = $this->session->getQuote();
         $address = $quote->getBillingAddress();
         if ($this->_customerSession->isLoggedIn()) {
@@ -229,7 +222,14 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function createFullCartInDr($quote, $return = null)
     {
         if ($this->session->getDrAccessToken()) {
-            $accessToken = $this->session->getDrAccessToken();
+            $accessToken = $this->session->getDrAccessToken();			
+			if ($accessToken) {
+				$checktoken = $this->checkDrAccessTokenValidation($accessToken);
+				if(!$checktoken){
+					$accessToken = $this->convertTokenToFullAccessToken();
+					$this->session->setDrAccessToken($accessToken);
+				}
+			}
         } else {
             $accessToken = $this->convertTokenToFullAccessToken();
             $this->session->setDrAccessToken($accessToken);
