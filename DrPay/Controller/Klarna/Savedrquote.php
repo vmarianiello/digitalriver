@@ -112,7 +112,7 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
                 'currency' => $quote->getQuoteCurrencyCode(),
 				'owner' => [
 					'firstName' => $address->getFirstname(),
-					'lastName' => "McLaughlin",
+					'lastName' => $address->getLastname(),
 					'email' => $quote->getCustomerEmail() ? $quote->getCustomerEmail() : $this->_checkoutSession->getGuestCustomerEmail(),
 					'phoneNumber' => $address->getTelephone(),
 					'address' =>  [
