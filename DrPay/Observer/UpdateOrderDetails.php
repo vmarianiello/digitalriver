@@ -85,15 +85,14 @@ class UpdateOrderDetails implements ObserverInterface
 				$model->save();
 				foreach ($order->getAllVisibleItems() as $orderitem) {
 					foreach($lineItems as $item){
-						if($orderitem->getSku() == $item["product"]['id']){
+						if($orderitem->getSku() == $item["product"]["externalReferenceId"]){
 							$orderitem->setDrOrderLineitemId($item['id']);
-							$orderitem->save();
 							break;
 						}
 					}
 					$lineItems = $cartresult["cart"]['lineItems']['lineItem'];
 					foreach($lineItems as $item){
-						if($orderitem->getSku() == $item["product"]['id']){
+						if($orderitem->getSku() == $item["product"]["externalReferenceId"]){
 							$qty = $item['quantity'];
 							$listprice = $item["pricing"];
 							if(isset($listprice["tax"]['value'])){
@@ -108,7 +107,6 @@ class UpdateOrderDetails implements ObserverInterface
 								$orderitem->setBasePriceInclTax($this->convertToBaseCurrency($orderitem->getPrice() + $tax_amount));
 								$orderitem->setRowTotalInclTax($orderitem->getRowTotal() + $total_tax_amount);
 								$orderitem->setBaseRowTotalInclTax($this->convertToBaseCurrency($orderitem->getRowTotal() + $total_tax_amount));
-								$orderitem->save();
 								break;
 							}
 						}
