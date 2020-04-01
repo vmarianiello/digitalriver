@@ -31,7 +31,8 @@ class UpdateOrderDetails implements ObserverInterface
 		\Magento\Sales\Model\Order $order,
 		\Digitalriver\DrPay\Model\DrConnector $drconnector,
 		\Magento\Framework\Json\Helper\Data $jsonHelper,
-        \Magento\Store\Model\StoreManagerInterface $storeManager
+        \Magento\Store\Model\StoreManagerInterface $storeManager,
+        \Magento\Directory\Model\CurrencyFactory $currencyFactory
     ) {
         $this->helper =  $helper;
         $this->session = $session;
@@ -39,6 +40,7 @@ class UpdateOrderDetails implements ObserverInterface
 		$this->drconnector = $drconnector;
 		$this->jsonHelper = $jsonHelper;
         $this->_storeManager = $storeManager;
+		$this->currencyFactory = $currencyFactory;
     }
 
     /**
@@ -65,7 +67,7 @@ class UpdateOrderDetails implements ObserverInterface
 			$amount = $quote->getDrTax();
 			$order->setDrTax($amount);
 			$order->setTaxAmount($amount);
-			$order->setBaseTaxAmount($amount);
+			$order->setBaseTaxAmount($this->convertToBaseCurrency($amount));
 			if($result["submitCart"]["order"]["orderState"]){
 				$order->setDrOrderState($result["submitCart"]["order"]["orderState"]);
 			}
@@ -83,27 +85,28 @@ class UpdateOrderDetails implements ObserverInterface
 				$model->save();
 				foreach ($order->getAllVisibleItems() as $orderitem) {
 					foreach($lineItems as $item){
-						if($orderitem->getSku() == $item["product"]['id']){
+						if($orderitem->getSku() == $item["product"]["externalReferenceId"]){
 							$orderitem->setDrOrderLineitemId($item['id']);
-							$orderitem->save();
 							break;
 						}
 					}
 					$lineItems = $cartresult["cart"]['lineItems']['lineItem'];
 					foreach($lineItems as $item){
-						if($orderitem->getSku() == $item["product"]['id']){
+						if($orderitem->getSku() == $item["product"]["externalReferenceId"]){
 							$qty = $item['quantity'];
 							$listprice = $item["pricing"];
 							if(isset($listprice["tax"]['value'])){
 								$total_tax_amount = $listprice["tax"]['value'];
 								$tax_amount = $total_tax_amount/$qty;
 								$orderitem->setTaxAmount($total_tax_amount);
+								$orderitem->setBaseTaxAmount($this->convertToBaseCurrency($total_tax_amount));
 								if(isset($listprice["taxRate"])){
 									$orderitem->setTaxPercent($listprice["taxRate"] * 100);
 								}
 								$orderitem->setPriceInclTax($orderitem->getPrice() + $tax_amount);
+								$orderitem->setBasePriceInclTax($this->convertToBaseCurrency($orderitem->getPrice() + $tax_amount));
 								$orderitem->setRowTotalInclTax($orderitem->getRowTotal() + $total_tax_amount);
-								$orderitem->save();
+								$orderitem->setBaseRowTotalInclTax($this->convertToBaseCurrency($orderitem->getRowTotal() + $total_tax_amount));
 								break;
 							}
 						}
@@ -113,5 +116,18 @@ class UpdateOrderDetails implements ObserverInterface
 			$order->save();
 			$this->session->setDrAccessToken('');
 		}
+    }
+
+	public function convertToBaseCurrency($price)
+    {
+        //you can also pass INR code here insted of below current store currency
+        $currentCurrency = $this->_storeManager->getStore()->getCurrentCurrency()->getCode();
+
+        $baseCurrency = $this->_storeManager->getStore()->getBaseCurrency()->getCode();
+
+        $rate = $this->currencyFactory->create()->load($currentCurrency)->getAnyRate($baseCurrency);
+        $returnValue = $price * $rate;
+
+        return $returnValue;
     }
 }

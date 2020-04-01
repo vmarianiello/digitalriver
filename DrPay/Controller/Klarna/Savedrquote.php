@@ -112,7 +112,7 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
                 'currency' => $quote->getQuoteCurrencyCode(),
 				'owner' => [
 					'firstName' => $address->getFirstname(),
-					'lastName' => "McLaughlin",
+					'lastName' => $address->getLastname(),
 					'email' => $quote->getCustomerEmail() ? $quote->getCustomerEmail() : $this->_checkoutSession->getGuestCustomerEmail(),
 					'phoneNumber' => $address->getTelephone(),
 					'address' =>  [
@@ -128,8 +128,8 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
                     'returnUrl' => $returnurl,
                     'cancelUrl' => $cancelurl,
                     'items' => $itemsArr,
-                    'taxAmount' => round($taxAmnt, 2),
-                    'shippingAmount' => round($shipAmnt, 2),
+                    'taxAmount' => 0,
+                    'shippingAmount' => round($shipAmnt, 2) + round($taxAmnt, 2),
                     'requestShipping' => true,
                     'shipping' => $shipping,
                 ],

@@ -33,11 +33,11 @@ class OrderRefundObserver implements ObserverInterface
         $creditmemo = $observer->getEvent()->getCreditmemo();
         $order = $creditmemo->getOrder();
         if ($order->getDrOrderId()) {
-                $status = $this->drHelper->initiateRefundRequest($creditmemo);
+            $status = $this->drHelper->initiateRefundRequest($creditmemo);
             if (!$status) {
                 throw new \Exception('There is an issue with Refund at DR side');
             }
-                return $this;
+            return $this;
         }
     }
 }
