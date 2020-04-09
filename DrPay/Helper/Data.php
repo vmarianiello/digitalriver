@@ -369,12 +369,14 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 }
                 if ($quote->getIsVirtual()) {
                     $shippingAmount = 0;
+					$shippingMethod = '';
                     $shippingTitle = "Shipping Price";
                 } else {
                     $shippingAmount = $quote->getShippingAddress()->getShippingAmount();
+                    $shippingMethod = $quote->getShippingAddress()->getShippingMethod();
                     $shippingTitle = $quote->getShippingAddress()->getShippingDescription();
                 }
-                if ($shippingAmount > 0) {
+                if ($shippingMethod) {
                     $shippingDetails =  [];
                     $shippingDetails["shippingOffer"]["offerId"] = $this->getShippingOfferId();
                     $shippingDetails["shippingOffer"]["customDescription"] = $shippingTitle;
