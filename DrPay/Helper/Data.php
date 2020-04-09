@@ -249,7 +249,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 }
 				$tax_inclusive = $this->scopeConfig->getValue('tax/calculation/price_includes_tax');
                 $data = [];
-                $orderLevelExtendedAttribute = ['name' => 'OrderLevelExtendedAttribute1', 'value' => 'test01'];
+                $orderLevelExtendedAttribute = ['name' => 'QuoteID', 'value' => $quote->getId()];
 
                 $data["cart"]["customAttributes"]["attribute"] = $orderLevelExtendedAttribute;
 				$data["cart"]["customAttributes"]["name"] = "TaxInclusiveOverride";
@@ -260,15 +260,21 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 				}
                 $lineItems = [];
                 $currency = $this->storeManager->getStore()->getCurrentCurrency()->getCode();
-                foreach ($quote->getAllVisibleItems() as $item) {
-                    $item = ($item->getParentItemId())?$item->getParentItem():$item;
+                foreach ($quote->getAllItems() as $item) {					
+					if($item->getProductType() == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE || $item->getProductType() == \Magento\Bundle\Model\Product\Type::TYPE_CODE){
+						continue;
+					}
+					if($item->getParentItemId()){
+						if($item->getParentItem()->getProductType() == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE){
+							$item = $item->getParentItem();
+						}
+					}
                     $lineItem =  [];
                     $lineItem["quantity"] = $item->getQty();
                     $price = $item->getCalculationPrice();
 					if($tax_inclusive){
 						$price = $item->getPriceInclTax();
 					}
-                    $this->updateAccessTokenCurrency($accessToken, $currency);
                     if ($item->getDiscountAmount() > 0) {
                         $price = $price - ($item->getDiscountAmount()/$item->getQty());
                     }
@@ -276,16 +282,15 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                         $price = 0;
                     }
 					$sku = $item->getSku();
-					$type_code = \Magento\Bundle\Model\Product\Type::TYPE_CODE;
-                    if ($item->getProductType() == $type_code) {
-                        $sku = $item->getProduct()->getData("sku");
-                    }
                     $lineItem["product"] = ['id' => $sku];
                     //$lineItem["product"] = ['id' => '5321623900'];
                     $lineItem["pricing"]["salePrice"] = ['currency' => $currency, 'value' => round($price, 2)];
-					$lineItemLevelExtendedAttribute = ['name' => 'magento_quote_item_id',
-                'value' => $item->getId()];
-                    $lineItem["customAttributes"]["attribute"] = $lineItemLevelExtendedAttribute;
+					$lineItemLevelExtendedAttribute = ['name' => 'magento_quote_item_id', 'value' => $item->getId()];
+                    $lineItem["customAttributes"]["attribute"][] = $lineItemLevelExtendedAttribute;
+					if($item->getParentItemId()){
+						$parentExternalReferenceId = ["name" => "parentExternalReferenceId", "value" => $item->getParentItem()->getSku()];
+						$lineItem["customAttributes"]["attribute"][] = $parentExternalReferenceId;
+					}
                     $lineItems["lineItem"][] = $lineItem;
                 }
                 $data["cart"]["lineItems"] = $lineItems;
@@ -717,7 +722,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             foreach ($lineItems as $item) {
                 $items['item'][] = 
                     ["requisitionID" => $order->getDrOrderId(),
-                        "noticeExternalReferenceID" => $order->getIncrementId(),
+                        "noticeExternalReferenceID" => $order->getQuoteId(),
                         "lineItemID" => $item['lineitemid'],
                         "fulfillmentCompanyID" => $this->getCompanyId(),
                         "electronicFulfillmentNoticeItems" => [
