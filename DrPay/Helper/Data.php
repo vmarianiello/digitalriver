@@ -4,7 +4,7 @@
  *
  * @category Digitalriver
  * @package  Digitalriver_DrPay
- * @author   Pradeep <pradeep.samal@diconium.com>
+ * @author   Balaji S <balaji.setti@diconium.com>
  */
  
 namespace Digitalriver\DrPay\Helper;
@@ -247,17 +247,15 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     $url = $this->getDrBaseUrl() .
                     "v1/shoppers/me/carts/active?format=json&skipOfferArbitration=true";
                 }
-				$tax_inclusive = $this->scopeConfig->getValue('tax/calculation/price_includes_tax');
+				$tax_inclusive = $this->scopeConfig->getValue('tax/calculation/price_includes_tax','website');
                 $data = [];
                 $orderLevelExtendedAttribute = ['name' => 'QuoteID', 'value' => $quote->getId()];
-
-                $data["cart"]["customAttributes"]["attribute"] = $orderLevelExtendedAttribute;
-				$data["cart"]["customAttributes"]["name"] = "TaxInclusiveOverride";
-				$data["cart"]["customAttributes"]["type"] = "Boolean";
-				$data["cart"]["customAttributes"]["value"] = "false";
+                $data["cart"]["customAttributes"]["attribute"][] = $orderLevelExtendedAttribute;
+				$taxInclusiveOverride = ['name' => 'TaxInclusiveOverride', 'type' => 'Boolean', 'value' => 'false'];
 				if($tax_inclusive){
-					$data["cart"]["customAttributes"]["value"] = "true";
+					$taxInclusiveOverride["value"] = "true";
 				}
+                $data["cart"]["customAttributes"]["attribute"][] = $taxInclusiveOverride;
                 $lineItems = [];
                 $currency = $this->storeManager->getStore()->getCurrentCurrency()->getCode();
                 foreach ($quote->getAllItems() as $item) {					
