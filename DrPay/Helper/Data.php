@@ -269,12 +269,17 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 					}
                     $lineItem =  [];
                     $lineItem["quantity"] = $item->getQty();
+					if($item->getParentItemId()){
+						if($item->getParentItem()->getProductType() == \Magento\Bundle\Model\Product\Type::TYPE_CODE){
+							$lineItem["quantity"] = $item->getQty() * $item->getParentItem()->getQty();
+						}
+					}
                     $price = $item->getCalculationPrice();
 					if($tax_inclusive){
 						$price = $item->getPriceInclTax();
 					}
                     if ($item->getDiscountAmount() > 0) {
-                        $price = $price - ($item->getDiscountAmount()/$item->getQty());
+                        $price = $price - ($item->getDiscountAmount()/$lineItem["quantity"]);
                     }
                     if ($price <= 0) {
                         $price = 0;
