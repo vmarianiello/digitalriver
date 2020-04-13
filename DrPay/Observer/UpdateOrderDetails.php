@@ -32,7 +32,8 @@ class UpdateOrderDetails implements ObserverInterface
 		\Digitalriver\DrPay\Model\DrConnector $drconnector,
 		\Magento\Framework\Json\Helper\Data $jsonHelper,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
-        \Magento\Directory\Model\CurrencyFactory $currencyFactory
+        \Magento\Directory\Model\CurrencyFactory $currencyFactory,
+		\Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
     ) {
         $this->helper =  $helper;
         $this->session = $session;
@@ -41,6 +42,7 @@ class UpdateOrderDetails implements ObserverInterface
 		$this->jsonHelper = $jsonHelper;
         $this->_storeManager = $storeManager;
 		$this->currencyFactory = $currencyFactory;
+		$this->scopeConfig = $scopeConfig;
     }
 
     /**
@@ -65,6 +67,12 @@ class UpdateOrderDetails implements ObserverInterface
 			$orderId = $result["submitCart"]["order"]["id"];
 			$order->setDrOrderId($orderId);
 			$amount = $quote->getDrTax();
+			$tax_inclusive = $this->scopeConfig->getValue('tax/calculation/price_includes_tax','website');
+			if($tax_inclusive){
+				if(isset($result["submitCart"]["pricing"]["tax"]["value"])){
+					$amount = $result["submitCart"]["pricing"]["tax"]["value"];
+				}
+			}
 			$order->setDrTax($amount);
 			$order->setTaxAmount($amount);
 			$order->setBaseTaxAmount($this->convertToBaseCurrency($amount));

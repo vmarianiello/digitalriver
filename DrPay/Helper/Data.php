@@ -410,7 +410,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 $this->session->setDrQuoteError(false);
                 $drquoteId = $result["cart"]["id"];
                 $this->session->setDrQuoteId($drquoteId);
-                $drtax = $result["cart"]["pricing"]["tax"]["value"];
+				if($tax_inclusive){
+					$shippingAndHandling = $result["cart"]["pricing"]["shippingAndHandling"]["value"];
+					$this->session->setDrShipping($shippingAndHandling);
+					$drtax = 0;
+				} else {
+					$drtax = $result["cart"]["pricing"]["tax"]["value"];
+				}
                 $this->session->setDrTax($drtax);
                 $this->session->setMagentoAppliedTax($address->getTaxAmount());
                 if ($return) {

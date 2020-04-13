@@ -49,6 +49,19 @@ class DrTax extends \Magento\Quote\Model\Quote\Address\Total\AbstractTotal
             $total->setBaseGrandTotal($total->getBaseGrandTotal() - $magentoTax + $drtax);
             $total->setGrandTotal($total->getGrandTotal() - $magentoTax + $drtax);
         }
+		$drshipping = $this->_checkoutSession->getDrShipping();
+		if($drshipping > 0){
+			$magentoShipping = $total->getShippingAmount();
+			$quote->setDrShipping($drshipping);
+			$total->setDrShipping($drshipping);
+			$total->setShippingInclTax($drshipping);
+			$baseGrandTotal = ($total->getBaseGrandTotal())?$total->getBaseGrandTotal():0;
+			$grandTotal = ($total->getGrandTotal())?$total->getGrandTotal():0;
+			if ($baseGrandTotal > 0 && $grandTotal > 0) {
+				$total->setBaseGrandTotal($total->getBaseGrandTotal() - $magentoShipping + $drshipping);
+				$total->setGrandTotal($total->getGrandTotal() - $magentoShipping + $drshipping);
+			}
+		}
         return $this;
     }
     /**
