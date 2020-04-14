@@ -28,11 +28,13 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
         \Magento\Framework\App\Action\Context $context,
         \Magento\Checkout\Model\Session $checkoutSession,
         \Magento\Directory\Model\Region $regionModel,
+		\Magento\Customer\Model\AddressFactory $addressFactory,
         \Digitalriver\DrPay\Helper\Data $helper
     ) {
         $this->helper =  $helper;
         $this->_checkoutSession = $checkoutSession;
         $this->regionModel = $regionModel;
+		$this->_addressFactory = $addressFactory;
         parent::__construct($context);
     }
     /**
@@ -70,10 +72,12 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
             if ($address && $address->getId()) {
 				if(!$address->getCity()){
 					$customer = $quote->getCustomer();
-					$billingAddressId = $customer->getDefaultBilling();
-					if($billingAddressId){
-						$billingAddress = $this->_addressFactory->create()->load($billingAddressId);
-						$address = $billingAddress;
+					if($customer->getId()){
+						$billingAddressId = $customer->getDefaultBilling();
+						if($billingAddressId){
+							$billingAddress = $this->_addressFactory->create()->load($billingAddressId);
+							$address = $billingAddress;
+						}
 					}
 				}
                 $shipAmnt = $address->getShippingAmount() ? $address->getShippingAmount() : 0;

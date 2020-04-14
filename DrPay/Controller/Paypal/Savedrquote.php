@@ -71,10 +71,12 @@ class Savedrquote extends \Magento\Framework\App\Action\Action
             if ($address && $address->getId()) {
 				if(!$address->getCity()){
 					$customer = $quote->getCustomer();
-					$billingAddressId = $customer->getDefaultBilling();
-					if($billingAddressId){
-						$billingAddress = $this->_addressFactory->create()->load($billingAddressId);
-						$address = $billingAddress;
+					if($customer->getId()){
+						$billingAddressId = $customer->getDefaultBilling();
+						if($billingAddressId){
+							$billingAddress = $this->_addressFactory->create()->load($billingAddressId);
+							$address = $billingAddress;
+						}
 					}
 				}
                 $shipAmnt = $address->getShippingAmount() ? $address->getShippingAmount() : 0;
