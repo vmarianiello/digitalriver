@@ -247,7 +247,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     $url = $this->getDrBaseUrl() .
                     "v1/shoppers/me/carts/active?format=json&skipOfferArbitration=true";
                 }
-				$tax_inclusive = $this->scopeConfig->getValue('tax/calculation/price_includes_tax','website');
+				$tax_inclusive = $this->scopeConfig->getValue('dr_settings/config/price_includes_tax', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
                 $data = [];
                 $orderLevelExtendedAttribute = ['name' => 'QuoteID', 'value' => $quote->getId()];
                 $data["cart"]["customAttributes"]["attribute"][] = $orderLevelExtendedAttribute;
@@ -375,7 +375,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 					$shippingMethod = '';
                     $shippingTitle = "Shipping Price";
                 } else {
-                    $shippingAmount = $quote->getShippingAddress()->getShippingAmount();
+                    $shippingAmount = $quote->getShippingAddress()->getShippingInclTax();
                     $shippingMethod = $quote->getShippingAddress()->getShippingMethod();
                     $shippingTitle = $quote->getShippingAddress()->getShippingDescription();
                 }
@@ -412,12 +412,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 $this->session->setDrQuoteId($drquoteId);
 				if($tax_inclusive){
 					$shippingAndHandling = $result["cart"]["pricing"]["shippingAndHandling"]["value"];
-					$this->session->setDrShipping($shippingAndHandling);
 					$drtax = 0;
 				} else {
 					$drtax = $result["cart"]["pricing"]["tax"]["value"];
+					$shippingAndHandling = 0;
 				}
                 $this->session->setDrTax($drtax);
+				$this->session->setDrShipping($shippingAndHandling);
                 $this->session->setMagentoAppliedTax($address->getTaxAmount());
                 if ($return) {
                     return $result;
@@ -753,6 +754,45 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $request['ElectronicFulfillmentNoticeArray'] = $items;
         return $this->jsonHelper->jsonEncode($request);
     }
+	/**
+     *
+     * @return type
+     */
+    public function cancelDROrder($quote, $result){		
+        if ($quote->getId()) {
+            $url = $this->getDrPostUrl();
+			$status = "Cancelled";
+			$responseCode = "Cancelled";
+			$items = [];
+            $lineItems = $result["submitCart"]['lineItems']['lineItem'];
+			$orderId = $result["submitCart"]["order"]["id"];
+            foreach ($lineItems as $item) {
+                $items['item'][] = 
+                    ["requisitionID" => $orderId,
+                        "noticeExternalReferenceID" => $quote->getId(),
+                        "lineItemID" => $item['id'],
+                        "fulfillmentCompanyID" => $this->getCompanyId(),
+                        "electronicFulfillmentNoticeItems" => [
+                            "item" => [
+                                [
+                                    "status" => $status,
+                                    "reasonCode" => $responseCode,
+                                    "quantity" => $item['quantity'],
+                                    "electronicContentType" => "EntitlementDetail",
+                                    "electronicContent" => "magentoEventID"
+                                ]
+                            ]
+                        ]
+                    ];
+            }
+			$request['ElectronicFulfillmentNoticeArray'] = $items;
+            $this->curl->setOption(CURLOPT_RETURNTRANSFER, true);
+            $this->curl->setOption(CURLOPT_TIMEOUT, 40);
+            $this->curl->addHeader("Content-Type", "application/json");
+            $this->curl->post($url, $this->jsonHelper->jsonEncode($request));
+            $result = $this->curl->getBody();
+		}
+	}
 
     /**
      *
