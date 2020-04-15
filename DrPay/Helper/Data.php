@@ -242,12 +242,12 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 $testorder = $this->getIsTestOrder();
                 if ($testorder) {
                     $url = $this->getDrBaseUrl() .
-                    "v1/shoppers/me/carts/active?format=json&skipOfferArbitration=true&testOrder=true";
+                    "v1/shoppers/me/carts/active?format=json&skipOfferArbitration=true&testOrder=true&expand=all";
                 } else {
                     $url = $this->getDrBaseUrl() .
                     "v1/shoppers/me/carts/active?format=json&skipOfferArbitration=true";
                 }
-				$tax_inclusive = $this->scopeConfig->getValue('dr_settings/config/price_includes_tax', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+				$tax_inclusive = $this->scopeConfig->getValue('tax/calculation/price_includes_tax', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
                 $data = [];
                 $orderLevelExtendedAttribute = ['name' => 'QuoteID', 'value' => $quote->getId()];
                 $data["cart"]["customAttributes"]["attribute"][] = $orderLevelExtendedAttribute;
@@ -375,7 +375,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 					$shippingMethod = '';
                     $shippingTitle = "Shipping Price";
                 } else {
-                    $shippingAmount = $quote->getShippingAddress()->getShippingInclTax();
+                    $shippingAmount = $quote->getShippingAddress()->getShippingAmount();
                     $shippingMethod = $quote->getShippingAddress()->getShippingMethod();
                     $shippingTitle = $quote->getShippingAddress()->getShippingDescription();
                 }
@@ -814,6 +814,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 $this->curl->addHeader("x-siteid", $this->getCompanyId());
                 $this->curl->addHeader("Authorization", "Bearer " . $token);
                 $this->curl->post($url, json_encode($data));
+				$this->_logger->error("Refund Request :".json_encode($data));
                 $result = $this->curl->getBody();
                 $result = json_decode($result, true);
                 if (isset($result['errors']) && count($result['errors'])>0) {

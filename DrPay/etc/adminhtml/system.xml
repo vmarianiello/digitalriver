@@ -65,11 +65,6 @@
                 <field id="company_id" translate="label" type="text" sortOrder="55" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Company Id</label>
                 </field>
-                <field id="price_includes_tax" translate="label comment" type="select" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
-                    <label>Catalog Prices</label>
-                    <backend_model>Magento\Tax\Model\Config\Price\IncludePrice</backend_model>
-                    <source_model>Magento\Tax\Model\System\Config\Source\PriceType</source_model>
-                </field>
                 <field id="dr_refund_url" translate="label" type="text" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Refund Url</label>
                 </field>
