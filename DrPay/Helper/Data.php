@@ -988,4 +988,28 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $dr_offer = 'dr_settings/config/offer_id';
         return $this->scopeConfig->getValue($dr_offer, \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
+    
+    /**
+     * Function to validate Quote for any errors, As in some cases Magento encounters an exception. 
+     * To avoid this, Quote is validated before proceeding for order processing
+     * 
+     * @param object $quote
+     * @return bool $isValidQuote
+     **/
+    public function validateQuote(\Magento\Quote\Model\Quote $quote) {
+        $isValidQuote = false;
+        
+        try {
+            $errors         = $quote->getErrors();
+            $isValidQuote   = (empty($errors)) ? true : false;
+        } catch (\Magento\Framework\Exception\LocalizedException $le) {
+            $this->_logger->info('Issue in Quote/Order');
+            $this->_logger->error($this->jsonHelper->jsonEncode($le->getRawMessage()));
+        } catch (\Exception $e) {
+            $this->_logger->info('Issue in Quote/Order');
+            $this->_logger->error($this->jsonHelper->jsonEncode($e->getMessage()));
+        } // end: try
+        
+        return $isValidQuote;                
+    } // end: functoin validateQuote
 }
