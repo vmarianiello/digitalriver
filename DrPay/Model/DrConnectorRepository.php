@@ -80,17 +80,17 @@ class DrConnectorRepository extends \Magento\Framework\Model\AbstractModel
         try {
             if ($requisitionId) {
                 $order = $this->orderFactory->create()->load($requisitionId, 'dr_order_id');
-                if ($order->getId() && $order->getStatus() != \Magento\Sales\Model\Order::STATE_CANCELED) { 
-                    if($order->getDrOrderState() != "Submitted"){ 
-						//update order status to processing as OFI means payment received
-						$order->setDrOrderState("Submitted"); 
-						$order->setState(Order::STATE_PROCESSING); 
-                        $order->setStatus(Order::STATE_PROCESSING);
-                        $order->save();
-                    }
+                if ($order->getId() && $order->getStatus() != \Magento\Sales\Model\Order::STATE_CANCELED) {                   
                     $model = $this->resource->create();
                     $model->load($order->getDrOrderId(), 'requisition_id');
-                    if (!$model->getId()) {
+                    if (!$model->getId() || $order->getDrOrderState() != "Submitted") {
+						 if($order->getDrOrderState() != "Submitted"){ 
+							//update order status to processing as OFI means payment received
+							$order->setDrOrderState("Submitted"); 
+							$order->setState(Order::STATE_PROCESSING); 
+							$order->setStatus(Order::STATE_PROCESSING);
+							$order->save();
+						}
                         $model->setData($data);
                         $model->save();
                         $response = ['ElectronicFulfillmentResponse' => [

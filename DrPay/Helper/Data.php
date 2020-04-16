@@ -242,7 +242,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 $testorder = $this->getIsTestOrder();
                 if ($testorder) {
                     $url = $this->getDrBaseUrl() .
-                    "v1/shoppers/me/carts/active?format=json&skipOfferArbitration=true&testOrder=true&expand=all";
+                    "v1/shoppers/me/carts/active?format=json&skipOfferArbitration=true&testOrder=true";
                 } else {
                     $url = $this->getDrBaseUrl() .
                     "v1/shoppers/me/carts/active?format=json&skipOfferArbitration=true";
