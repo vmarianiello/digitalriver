@@ -91,6 +91,7 @@ class UpdateOrderDetails implements ObserverInterface
 				}
 				$model->setLineItemIds($this->jsonHelper->jsonEncode($lineItemIds));
 				$model->save();
+				$subtotal = 0;
 				foreach ($order->getAllItems() as $orderitem) {
 					$lineItems = $cartresult["cart"]['lineItems']['lineItem'];
 					foreach($lineItems as $item){
@@ -103,10 +104,15 @@ class UpdateOrderDetails implements ObserverInterface
 						}
 						if($drItemMagentoRefId == $magentoItemId){
 							$this->updateDrItemsDetails($orderitem, $item, $tax_inclusive);
+							$subtotal = $subtotal + $orderitem->getRowTotal();
 							break;
 						}
 					}
 				}
+			}
+			if($tax_inclusive){
+				$order->setSubtotal($subtotal);
+				$order->setBaseSubtotal($this->convertToBaseCurrency($subtotal));
 			}
 			$order->save();
 			$this->session->setDrAccessToken('');
@@ -125,13 +131,21 @@ class UpdateOrderDetails implements ObserverInterface
 			if(isset($listprice["taxRate"])){
 				$orderitem->setTaxPercent($listprice["taxRate"] * 100);
 			}
-			if($tax_inclusive){
+			if($tax_inclusive){				
+				$orderitem->setPrice($listprice["salePrice"]['value']);
+				$orderitem->setBasePrice($this->convertToBaseCurrency($orderitem->getPrice()));
+				//$orderitem->setOriginalPrice($orderitem->getPrice());
+				//$orderitem->setBaseOriginalPrice($orderitem->getBasePrice());
+				$orderitem->setRowTotal($orderitem->getPrice() * $qty);
+				$orderitem->setBaseRowTotal($this->convertToBaseCurrency($orderitem->getRowTotal()));
+				/*
 				$orderitem->setPrice($orderitem->getPriceInclTax() - $tax_amount);
 				$orderitem->setBasePrice($this->convertToBaseCurrency($orderitem->getPrice()));
 				//$orderitem->setOriginalPrice($orderitem->getPrice());
 				//$orderitem->setBaseOriginalPrice($orderitem->getBasePrice());
 				$orderitem->setRowTotal($orderitem->getRowTotalInclTax() - $total_tax_amount);
 				$orderitem->setBaseRowTotal($this->convertToBaseCurrency($orderitem->getRowTotal()));
+				*/
 			}else{
 				$orderitem->setPriceInclTax($orderitem->getPrice() + $tax_amount);
 				$orderitem->setBasePriceInclTax($this->convertToBaseCurrency($orderitem->getPriceInclTax()));

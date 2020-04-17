@@ -356,9 +356,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                         $shippingAddress["countrySubdivision"] = '';
                         $regionName = $address->getRegion();
                         if ($regionName) {
-                            $countryId = $address->getCountryId();
-                            $region = $this->regionModel->loadByName($regionName, $countryId);
-                            $shippingAddress["countrySubdivision"] = $region->getCode();
+							if(is_array($regionName)){
+								$shippingAddress["countrySubdivision"] = '';
+							}else{
+								$countryId = $address->getCountryId();
+								$region = $this->regionModel->loadByName($regionName, $countryId);
+								$shippingAddress["countrySubdivision"] = $region->getCode();
+							}
                         }
                         $shippingAddress["postalCode"] = $address->getPostcode();
                         $shippingAddress["country"] = $address->getCountryId();
