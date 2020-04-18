@@ -1016,4 +1016,63 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         
         return $isValidQuote;                
     } // end: functoin validateQuote
+    
+    /**
+     * Function to fetch Shipping address from result
+     * 
+     * @param array $shipResult
+     * 
+     * @return array $returnAddress
+     */
+    public function getPaymentShippingAddress($shipResult) {
+        $returnAddress  = [];       
+        $this->_logger->info('ShipResult: '.json_encode($shipResult));
+        $paymentShipAds = $shipResult['cart']['paymentMethod'];
+
+        if(!empty($paymentShipAds[$paymentShipAds['type']]) && !empty($paymentShipAds[$paymentShipAds['type']]['shipping'])) {
+            // Data = {recipient=Sekar German, phoneNumber=408-375-6883, address={line1=Test street, city=Melbourne, state=Vic, country=AU, postalCode=3000}}
+            $res = explode('{', $paymentShipAds[$paymentShipAds['type']]['shipping']);
+            $shippingAds = [];
+
+            array_walk($res, function($v, $k) use (&$shippingAds) {
+                if(!empty($v)) {
+                    $v          = preg_replace('/\}/', '', $v);
+                    $key_val    = explode(',', $v);
+                    
+                    array_walk($key_val, function($val, $key) use (&$shippingAds){
+                        $kv = explode('=', $val);
+                        
+                        if(count($kv) >= 2 && !empty($kv[1])) {
+                            $shippingAds[trim($kv[0])] = trim($kv[1]);
+                        } // end: if
+                    });
+                } // end: if
+            });
+            
+            // Get Region deails
+            $region = $this->regionModel->loadByCode($shippingAds['state'], $shippingAds['country'])->getData();
+            
+            $street = (!empty($shippingAds['line1'])) ? $shippingAds['line1'] : null;
+            $street .= (!empty($shippingAds['line2'])) ? (' '.$shippingAds['line2']) : null;
+            $street .= (!empty($shippingAds['line3'])) ? (' '.$shippingAds['line3']) : null;
+
+            $street = trim($street);
+            $phone  = str_replace('-', '', $shippingAds['phoneNumber']);
+            $name   = explode(' ', $shippingAds['recipient']);
+            
+            $returnAddress = [
+                'firstname' => (!empty($name[0])) ? trim($name[0]) : null,
+                'lastname'  => (!empty($name[1])) ? trim($name[1]) : null,
+                'street'    => $street,
+                'city'      => $shippingAds['city'],
+                'postcode'  => $shippingAds['postalCode'],
+                'country_id' => $shippingAds['country'],
+                'region'    => !empty($region['name']) ? $region['name'] : null,
+                'region_id'  => !empty($region['region_id']) ? $region['region_id'] : null,
+                'telephone' => $phone
+            ];            
+        } // end: if
+                
+        return $returnAddress;
+    } // end: function getPaymentShippingAddress
 }

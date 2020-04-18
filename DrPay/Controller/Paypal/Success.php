@@ -118,7 +118,7 @@ class Success extends \Magento\Framework\App\Action\Action
 							return;						
 						}
 
-						$this->_eventManager->dispatch('dr_place_order_success', ['order' => $order, 'quote' => $quote, 'result' => $result, 'cart_result' => $cartresult]);
+						$this->_eventManager->dispatch('dr_place_order_success', ['order' => $order, 'quote' => $quote, 'result' => $result, 'cart_result' => $cartresult, 'payment_result' => $paymentResult]);
 						$this->_redirect('checkout/onepage/success', array('_secure'=>true));
 						return;
 					} else {
