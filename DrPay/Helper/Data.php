@@ -4,7 +4,7 @@
  *
  * @category Digitalriver
  * @package  Digitalriver_DrPay
- * @author   Pradeep <pradeep.samal@diconium.com>
+ * @author   Balaji S <balaji.setti@diconium.com>
  */
  
 namespace Digitalriver\DrPay\Helper;
@@ -247,45 +247,53 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                     $url = $this->getDrBaseUrl() .
                     "v1/shoppers/me/carts/active?format=json&skipOfferArbitration=true";
                 }
-				$tax_inclusive = $this->scopeConfig->getValue('tax/calculation/price_includes_tax');
+				$tax_inclusive = $this->scopeConfig->getValue('tax/calculation/price_includes_tax', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
                 $data = [];
-                $orderLevelExtendedAttribute = ['name' => 'OrderLevelExtendedAttribute1', 'value' => 'test01'];
-
-                $data["cart"]["customAttributes"]["attribute"] = $orderLevelExtendedAttribute;
-				$data["cart"]["customAttributes"]["name"] = "TaxInclusiveOverride";
-				$data["cart"]["customAttributes"]["type"] = "Boolean";
-				$data["cart"]["customAttributes"]["value"] = "false";
+                $orderLevelExtendedAttribute = ['name' => 'QuoteID', 'value' => $quote->getId()];
+                $data["cart"]["customAttributes"]["attribute"][] = $orderLevelExtendedAttribute;
+				$taxInclusiveOverride = ['name' => 'TaxInclusiveOverride', 'type' => 'Boolean', 'value' => 'false'];
 				if($tax_inclusive){
-					$data["cart"]["customAttributes"]["value"] = "true";
+					$taxInclusiveOverride["value"] = "true";
 				}
+                $data["cart"]["customAttributes"]["attribute"][] = $taxInclusiveOverride;
                 $lineItems = [];
                 $currency = $this->storeManager->getStore()->getCurrentCurrency()->getCode();
-                foreach ($quote->getAllVisibleItems() as $item) {
-                    $item = ($item->getParentItemId())?$item->getParentItem():$item;
+                foreach ($quote->getAllItems() as $item) {					
+					if($item->getProductType() == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE || $item->getProductType() == \Magento\Bundle\Model\Product\Type::TYPE_CODE){
+						continue;
+					}
+					if($item->getParentItemId()){
+						if($item->getParentItem()->getProductType() == \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE){
+							$item = $item->getParentItem();
+						}
+					}
                     $lineItem =  [];
                     $lineItem["quantity"] = $item->getQty();
+					if($item->getParentItemId()){
+						if($item->getParentItem()->getProductType() == \Magento\Bundle\Model\Product\Type::TYPE_CODE){
+							$lineItem["quantity"] = $item->getQty() * $item->getParentItem()->getQty();
+						}
+					}
                     $price = $item->getCalculationPrice();
 					if($tax_inclusive){
 						$price = $item->getPriceInclTax();
 					}
-                    $this->updateAccessTokenCurrency($accessToken, $currency);
                     if ($item->getDiscountAmount() > 0) {
-                        $price = $price - ($item->getDiscountAmount()/$item->getQty());
+                        $price = $price - ($item->getDiscountAmount()/$lineItem["quantity"]);
                     }
                     if ($price <= 0) {
                         $price = 0;
                     }
 					$sku = $item->getSku();
-					$type_code = \Magento\Bundle\Model\Product\Type::TYPE_CODE;
-                    if ($item->getProductType() == $type_code) {
-                        $sku = $item->getProduct()->getData("sku");
-                    }
                     $lineItem["product"] = ['id' => $sku];
                     //$lineItem["product"] = ['id' => '5321623900'];
                     $lineItem["pricing"]["salePrice"] = ['currency' => $currency, 'value' => round($price, 2)];
-					$lineItemLevelExtendedAttribute = ['name' => 'magento_quote_item_id',
-                'value' => $item->getId()];
-                    $lineItem["customAttributes"]["attribute"] = $lineItemLevelExtendedAttribute;
+					$lineItemLevelExtendedAttribute = ['name' => 'magento_quote_item_id', 'value' => $item->getId()];
+                    $lineItem["customAttributes"]["attribute"][] = $lineItemLevelExtendedAttribute;
+					if($item->getParentItemId()){
+						$parentExternalReferenceId = ["name" => "parentExternalReferenceId", "value" => $item->getParentItem()->getSku()];
+						$lineItem["customAttributes"]["attribute"][] = $parentExternalReferenceId;
+					}
                     $lineItems["lineItem"][] = $lineItem;
                 }
                 $data["cart"]["lineItems"] = $lineItems;
@@ -348,9 +356,13 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                         $shippingAddress["countrySubdivision"] = '';
                         $regionName = $address->getRegion();
                         if ($regionName) {
-                            $countryId = $address->getCountryId();
-                            $region = $this->regionModel->loadByName($regionName, $countryId);
-                            $shippingAddress["countrySubdivision"] = $region->getCode();
+							if(is_array($regionName)){
+								$shippingAddress["countrySubdivision"] = '';
+							}else{
+								$countryId = $address->getCountryId();
+								$region = $this->regionModel->loadByName($regionName, $countryId);
+								$shippingAddress["countrySubdivision"] = $region->getCode();
+							}
                         }
                         $shippingAddress["postalCode"] = $address->getPostcode();
                         $shippingAddress["country"] = $address->getCountryId();
@@ -364,12 +376,14 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 }
                 if ($quote->getIsVirtual()) {
                     $shippingAmount = 0;
+					$shippingMethod = '';
                     $shippingTitle = "Shipping Price";
                 } else {
                     $shippingAmount = $quote->getShippingAddress()->getShippingAmount();
+                    $shippingMethod = $quote->getShippingAddress()->getShippingMethod();
                     $shippingTitle = $quote->getShippingAddress()->getShippingDescription();
                 }
-                if ($shippingAmount > 0) {
+                if ($shippingMethod) {
                     $shippingDetails =  [];
                     $shippingDetails["shippingOffer"]["offerId"] = $this->getShippingOfferId();
                     $shippingDetails["shippingOffer"]["customDescription"] = $shippingTitle;
@@ -400,8 +414,15 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 $this->session->setDrQuoteError(false);
                 $drquoteId = $result["cart"]["id"];
                 $this->session->setDrQuoteId($drquoteId);
-                $drtax = $result["cart"]["pricing"]["tax"]["value"];
+				if($tax_inclusive){
+					$shippingAndHandling = $result["cart"]["pricing"]["shippingAndHandling"]["value"];
+					$drtax = 0;
+				} else {
+					$drtax = $result["cart"]["pricing"]["tax"]["value"];
+					$shippingAndHandling = 0;
+				}
                 $this->session->setDrTax($drtax);
+				$this->session->setDrShipping($shippingAndHandling);
                 $this->session->setMagentoAppliedTax($address->getTaxAmount());
                 if ($return) {
                     return $result;
@@ -717,7 +738,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             foreach ($lineItems as $item) {
                 $items['item'][] = 
                     ["requisitionID" => $order->getDrOrderId(),
-                        "noticeExternalReferenceID" => $order->getIncrementId(),
+                        "noticeExternalReferenceID" => $order->getQuoteId(),
                         "lineItemID" => $item['lineitemid'],
                         "fulfillmentCompanyID" => $this->getCompanyId(),
                         "electronicFulfillmentNoticeItems" => [
@@ -737,6 +758,45 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $request['ElectronicFulfillmentNoticeArray'] = $items;
         return $this->jsonHelper->jsonEncode($request);
     }
+	/**
+     *
+     * @return type
+     */
+    public function cancelDROrder($quote, $result){		
+        if ($quote->getId()) {
+            $url = $this->getDrPostUrl();
+			$status = "Cancelled";
+			$responseCode = "Cancelled";
+			$items = [];
+            $lineItems = $result["submitCart"]['lineItems']['lineItem'];
+			$orderId = $result["submitCart"]["order"]["id"];
+            foreach ($lineItems as $item) {
+                $items['item'][] = 
+                    ["requisitionID" => $orderId,
+                        "noticeExternalReferenceID" => $quote->getId(),
+                        "lineItemID" => $item['id'],
+                        "fulfillmentCompanyID" => $this->getCompanyId(),
+                        "electronicFulfillmentNoticeItems" => [
+                            "item" => [
+                                [
+                                    "status" => $status,
+                                    "reasonCode" => $responseCode,
+                                    "quantity" => $item['quantity'],
+                                    "electronicContentType" => "EntitlementDetail",
+                                    "electronicContent" => "magentoEventID"
+                                ]
+                            ]
+                        ]
+                    ];
+            }
+			$request['ElectronicFulfillmentNoticeArray'] = $items;
+            $this->curl->setOption(CURLOPT_RETURNTRANSFER, true);
+            $this->curl->setOption(CURLOPT_TIMEOUT, 40);
+            $this->curl->addHeader("Content-Type", "application/json");
+            $this->curl->post($url, $this->jsonHelper->jsonEncode($request));
+            $result = $this->curl->getBody();
+		}
+	}
 
     /**
      *
@@ -758,6 +818,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 $this->curl->addHeader("x-siteid", $this->getCompanyId());
                 $this->curl->addHeader("Authorization", "Bearer " . $token);
                 $this->curl->post($url, json_encode($data));
+				$this->_logger->error("Refund Request :".json_encode($data));
                 $result = $this->curl->getBody();
                 $result = json_decode($result, true);
                 if (isset($result['errors']) && count($result['errors'])>0) {
@@ -931,4 +992,87 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $dr_offer = 'dr_settings/config/offer_id';
         return $this->scopeConfig->getValue($dr_offer, \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
+    
+    /**
+     * Function to validate Quote for any errors, As in some cases Magento encounters an exception. 
+     * To avoid this, Quote is validated before proceeding for order processing
+     * 
+     * @param object $quote
+     * @return bool $isValidQuote
+     **/
+    public function validateQuote(\Magento\Quote\Model\Quote $quote) {
+        $isValidQuote = false;
+        
+        try {
+            $errors         = $quote->getErrors();
+            $isValidQuote   = (empty($errors)) ? true : false;
+        } catch (\Magento\Framework\Exception\LocalizedException $le) {
+            $this->_logger->info('Issue in Quote/Order');
+            $this->_logger->error($this->jsonHelper->jsonEncode($le->getRawMessage()));
+        } catch (\Exception $e) {
+            $this->_logger->info('Issue in Quote/Order');
+            $this->_logger->error($this->jsonHelper->jsonEncode($e->getMessage()));
+        } // end: try
+        
+        return $isValidQuote;                
+    } // end: functoin validateQuote
+    
+    /**
+     * Function to fetch Shipping address from result
+     * 
+     * @param array $shipResult
+     * 
+     * @return array $returnAddress
+     */
+    public function getPaymentShippingAddress($shipResult) {
+        $returnAddress  = [];       
+        $this->_logger->info('ShipResult: '.json_encode($shipResult));
+        $paymentShipAds = $shipResult['cart']['paymentMethod'];
+
+        if(!empty($paymentShipAds[$paymentShipAds['type']]) && !empty($paymentShipAds[$paymentShipAds['type']]['shipping'])) {
+            // Data = {recipient=Sekar German, phoneNumber=408-375-6883, address={line1=Test street, city=Melbourne, state=Vic, country=AU, postalCode=3000}}
+            $res = explode('{', $paymentShipAds[$paymentShipAds['type']]['shipping']);
+            $shippingAds = [];
+
+            array_walk($res, function($v, $k) use (&$shippingAds) {
+                if(!empty($v)) {
+                    $v          = preg_replace('/\}/', '', $v);
+                    $key_val    = explode(',', $v);
+                    
+                    array_walk($key_val, function($val, $key) use (&$shippingAds){
+                        $kv = explode('=', $val);
+                        
+                        if(count($kv) >= 2 && !empty($kv[1])) {
+                            $shippingAds[trim($kv[0])] = trim($kv[1]);
+                        } // end: if
+                    });
+                } // end: if
+            });
+            
+            // Get Region deails
+            $region = $this->regionModel->loadByCode($shippingAds['state'], $shippingAds['country'])->getData();
+            
+            $street = (!empty($shippingAds['line1'])) ? $shippingAds['line1'] : null;
+            $street .= (!empty($shippingAds['line2'])) ? (' '.$shippingAds['line2']) : null;
+            $street .= (!empty($shippingAds['line3'])) ? (' '.$shippingAds['line3']) : null;
+
+            $street = trim($street);
+            $phone  = str_replace('-', '', $shippingAds['phoneNumber']);
+            $name   = explode(' ', $shippingAds['recipient']);
+            
+            $returnAddress = [
+                'firstname' => (!empty($name[0])) ? trim($name[0]) : null,
+                'lastname'  => (!empty($name[1])) ? trim($name[1]) : null,
+                'street'    => $street,
+                'city'      => $shippingAds['city'],
+                'postcode'  => $shippingAds['postalCode'],
+                'country_id' => $shippingAds['country'],
+                'region'    => !empty($region['name']) ? $region['name'] : null,
+                'region_id'  => !empty($region['region_id']) ? $region['region_id'] : null,
+                'telephone' => $phone
+            ];            
+        } // end: if
+                
+        return $returnAddress;
+    } // end: function getPaymentShippingAddress
 }
