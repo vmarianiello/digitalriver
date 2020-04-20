@@ -32,7 +32,9 @@ class UpdateOrderDetails implements ObserverInterface
 		\Digitalriver\DrPay\Model\DrConnector $drconnector,
 		\Magento\Framework\Json\Helper\Data $jsonHelper,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
-        \Magento\Directory\Model\CurrencyFactory $currencyFactory
+        \Magento\Directory\Model\CurrencyFactory $currencyFactory,
+		\Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
+            \Psr\Log\LoggerInterface $logger
     ) {
         $this->helper =  $helper;
         $this->session = $session;
@@ -41,6 +43,8 @@ class UpdateOrderDetails implements ObserverInterface
 		$this->jsonHelper = $jsonHelper;
         $this->_storeManager = $storeManager;
 		$this->currencyFactory = $currencyFactory;
+		$this->scopeConfig = $scopeConfig;
+        $this->logger = $logger;
     }
 
     /**
@@ -56,8 +60,19 @@ class UpdateOrderDetails implements ObserverInterface
 		$quote = $observer->getEvent()->getQuote();
 		$result = $observer->getEvent()->getResult();
 		$cartresult = $observer->getEvent()->getCartResult();
+                $paymentResult = $observer->getEvent()->getPaymentResult();                
 		//print_r($result);die;
 		if(isset($result["submitCart"]["order"]["id"])){
+                    // Update Order's Shipping Address details
+                    if(!empty($paymentResult)) {
+                        $shippingAddress = $this->helper->getPaymentShippingAddress($paymentResult);
+                        $this->logger->info('UpdateOrderDetails: '.json_encode($shippingAddress));
+                        if(!empty($shippingAddress)) {
+                            // Set shipping address data
+                            $order->getShippingAddress()->addData($shippingAddress);
+                        } // end: if
+                    } // end: if
+                    
 			if(isset($result["submitCart"]['paymentMethod']['wireTransfer'])){
 				$paymentData = $result["submitCart"]['paymentMethod']['wireTransfer'];
 				$order->getPayment()->setAdditionalInformation($paymentData);
@@ -65,6 +80,12 @@ class UpdateOrderDetails implements ObserverInterface
 			$orderId = $result["submitCart"]["order"]["id"];
 			$order->setDrOrderId($orderId);
 			$amount = $quote->getDrTax();
+			$tax_inclusive = $this->scopeConfig->getValue('tax/calculation/price_includes_tax', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+			if($tax_inclusive){
+				if(isset($result["submitCart"]["pricing"]["tax"]["value"])){
+					$amount = $result["submitCart"]["pricing"]["tax"]["value"];
+				}
+			}
 			$order->setDrTax($amount);
 			$order->setTaxAmount($amount);
 			$order->setBaseTaxAmount($this->convertToBaseCurrency($amount));
@@ -83,6 +104,7 @@ class UpdateOrderDetails implements ObserverInterface
 				}
 				$model->setLineItemIds($this->jsonHelper->jsonEncode($lineItemIds));
 				$model->save();
+				$subtotal = 0;
 				foreach ($order->getAllItems() as $orderitem) {
 					$lineItems = $cartresult["cart"]['lineItems']['lineItem'];
 					foreach($lineItems as $item){
@@ -94,18 +116,23 @@ class UpdateOrderDetails implements ObserverInterface
 							$magentoItemId = $orderitem->getSku();
 						}
 						if($drItemMagentoRefId == $magentoItemId){
-							$this->updateDrItemsDetails($orderitem, $item);
+							$this->updateDrItemsDetails($orderitem, $item, $tax_inclusive);
+							$subtotal = $subtotal + $orderitem->getRowTotal();
 							break;
 						}
 					}
 				}
+			}
+			if($tax_inclusive){
+				$order->setSubtotal($subtotal);
+				$order->setBaseSubtotal($this->convertToBaseCurrency($subtotal));
 			}
 			$order->save();
 			$this->session->setDrAccessToken('');
 		}
     }
 
-	public function updateDrItemsDetails($orderitem, $item){		
+	public function updateDrItemsDetails($orderitem, $item, $tax_inclusive){		
 		$orderitem->setDrOrderLineitemId($item['id']);
 		$qty = $item['quantity'];
 		$listprice = $item["pricing"];
@@ -117,10 +144,27 @@ class UpdateOrderDetails implements ObserverInterface
 			if(isset($listprice["taxRate"])){
 				$orderitem->setTaxPercent($listprice["taxRate"] * 100);
 			}
-			$orderitem->setPriceInclTax($orderitem->getPrice() + $tax_amount);
-			$orderitem->setBasePriceInclTax($this->convertToBaseCurrency($orderitem->getPrice() + $tax_amount));
-			$orderitem->setRowTotalInclTax($orderitem->getRowTotal() + $total_tax_amount);
-			$orderitem->setBaseRowTotalInclTax($this->convertToBaseCurrency($orderitem->getRowTotal() + $total_tax_amount));
+			if($tax_inclusive){				
+				$orderitem->setPrice($listprice["salePrice"]['value']);
+				$orderitem->setBasePrice($this->convertToBaseCurrency($orderitem->getPrice()));
+				//$orderitem->setOriginalPrice($orderitem->getPrice());
+				//$orderitem->setBaseOriginalPrice($orderitem->getBasePrice());
+				$orderitem->setRowTotal($orderitem->getPrice() * $qty);
+				$orderitem->setBaseRowTotal($this->convertToBaseCurrency($orderitem->getRowTotal()));
+				/*
+				$orderitem->setPrice($orderitem->getPriceInclTax() - $tax_amount);
+				$orderitem->setBasePrice($this->convertToBaseCurrency($orderitem->getPrice()));
+				//$orderitem->setOriginalPrice($orderitem->getPrice());
+				//$orderitem->setBaseOriginalPrice($orderitem->getBasePrice());
+				$orderitem->setRowTotal($orderitem->getRowTotalInclTax() - $total_tax_amount);
+				$orderitem->setBaseRowTotal($this->convertToBaseCurrency($orderitem->getRowTotal()));
+				*/
+			}else{
+				$orderitem->setPriceInclTax($orderitem->getPrice() + $tax_amount);
+				$orderitem->setBasePriceInclTax($this->convertToBaseCurrency($orderitem->getPriceInclTax()));
+				$orderitem->setRowTotalInclTax($orderitem->getRowTotal() + $total_tax_amount);
+				$orderitem->setBaseRowTotalInclTax($this->convertToBaseCurrency($orderitem->getRowTotalInclTax()));
+			}
 		}
 	}
 

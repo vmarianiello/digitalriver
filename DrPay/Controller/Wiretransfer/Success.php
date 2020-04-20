@@ -74,7 +74,7 @@ class Success extends \Magento\Framework\App\Action\Action
 				file_put_contents($logfilename, " wire Order Failed "." Quote Id ".$quote->getId(). "\r\n"." -> OrderData".json_encode($result)."\r\n", FILE_APPEND);
 				$this->messageManager->addError(__('Unable to Place Order!! Payment has been failed'));
 				return $resultRedirect->setPath('checkout/cart');
-			}else{ 				
+			}else{
 				// "last successful quote"
 				$quoteId = $quote->getId();
 				$this->checkoutSession->setLastQuoteId($quoteId)->setLastSuccessQuoteId($quoteId);
@@ -85,21 +85,30 @@ class Success extends \Magento\Framework\App\Action\Action
 						->setCustomerGroupId(\Magento\Customer\Model\Group::NOT_LOGGED_IN_ID);
 				}
 				$quote->collectTotals();
-				$order = $this->quoteManagement->submit($quote);
+				// Check quote has any errors
+				$isValidQuote = $this->helper->validateQuote($quote);
 
-				if ($order) {
-					$this->checkoutSession->setLastOrderId($order->getId())
-						->setLastRealOrderId($order->getIncrementId())
-						->setLastOrderStatus($order->getStatus());
-				} else{
-					$this->messageManager->addError(__('Unable to Place Order!! Payment has been failed'));
+				if(!empty($isValidQuote)){
+					$order = $this->quoteManagement->submit($quote);
+					if ($order) {
+						$this->checkoutSession->setLastOrderId($order->getId())
+								->setLastRealOrderId($order->getIncrementId())
+								->setLastOrderStatus($order->getStatus());
+					} else{
+						$this->helper->cancelDROrder($quote, $result);
+						$this->messageManager->addError(__('Unable to Place Order!! Payment has been failed'));
+						$this->_redirect('checkout/cart');
+						return;						
+					}
+
+					$this->_eventManager->dispatch('dr_place_order_success', ['order' => $order, 'quote' => $quote, 'result' => $result, 'cart_result' => $cartresult]);
+					$this->_redirect('checkout/onepage/success', array('_secure'=>true));
+					return;
+				} else {
+					$this->helper->cancelDROrder($quote, $result);
 					$this->_redirect('checkout/cart');
-					return;						
-				}
-				
-				$this->_eventManager->dispatch('dr_place_order_success', ['order' => $order, 'quote' => $quote, 'result' => $result, 'cart_result' => $cartresult]);
-				$this->_redirect('checkout/onepage/success', array('_secure'=>true));
-				return;
+					return;	
+				} // end: if
 			}
 		}
         $this->_redirect('checkout/cart');
